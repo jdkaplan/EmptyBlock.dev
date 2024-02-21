@@ -1,0 +1,7 @@
+# Keep the Docker context minimal and ignore everything by default.
+*
+
+# Add back in anything actually needed for the build.
+!/Cargo.lock
+!/Cargo.toml
+!/src
