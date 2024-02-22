@@ -1,8 +1,10 @@
-[package]
-name = "ebd"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = '2'
+members = [
+  'server',
+  'web',
+]
 
-[dependencies]
-axum = "0.7.4"
-tokio = { version = "1.36.0", features = ["full"] }
+[workspace.metadata.bin]
+trunk = { version = '0.18.8' }
+wasm-pack = { version = '0.12.1' }
