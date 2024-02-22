@@ -1,6 +1,9 @@
 app = 'ebd'
 primary_region = 'sjc'
 
+[deploy]
+release_command = "squill migrate -vvv --migrations-dir /src/migrations"
+
 [http_service]
 processes = ['app']
 internal_port = 8080

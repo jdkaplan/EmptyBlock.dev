@@ -52,9 +52,35 @@ COPY server server
 RUN cargo build --release --package server
 
 ###############################################################################
+# Build some deploy tools
+###############################################################################
+
+FROM rust:1.76.0 as tools
+
+ENV SQUILL_VERSION="v0.8.0"
+ENV SQUILL_DOWNLOAD_URL="https://github.com/jdkaplan/squill/releases/download/${SQUILL_VERSION}/squill-x86_64-unknown-linux-gnu.tar.xz"
+ENV SQUILL_SHA256="5050d2de2e69b565d95b57f49553fcf409ad323b5fe9f080e4e599fd91272d61"
+
+# TODO: When `ADD --checksum` is more widely supported, use that instead.
+RUN curl \
+    --location "${SQUILL_DOWNLOAD_URL}" \
+    --output /tmp/squill.tar.xz \
+    && (cd /tmp && echo "${SQUILL_SHA256}  squill.tar.xz" | sha256sum --check) \
+    && (mkdir /tmp/squill && cd /tmp/squill && tar -xvf /tmp/squill.tar.xz --strip-components 1) \
+    && (cp /tmp/squill/squill /usr/local/bin/squill) \
+    && chmod +x /usr/local/bin/squill \
+    && rm /tmp/squill.tar.xz
+
+###############################################################################
 # Make the runnable image
 ###############################################################################
 FROM debian:12.5-slim
+
+COPY migrations /src/migrations
+
+COPY --from=tools \
+    /usr/local/bin/squill \
+    /usr/local/bin/squill
 
 COPY --from=bundle \
     /usr/local/src/ebd/web/dist \

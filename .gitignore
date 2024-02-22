@@ -4,3 +4,6 @@
 
 # cargo-run-bin cache
 /.bin
+
+# Local dev config and secrets
+/.env

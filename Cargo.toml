@@ -6,5 +6,7 @@ members = [
 ]
 
 [workspace.metadata.bin]
+sea-orm-cli = { version = '0.12.14' }
+squill = { version = '0.8.0' }
 trunk = { version = '0.18.8' }
 wasm-pack = { version = '0.12.1' }

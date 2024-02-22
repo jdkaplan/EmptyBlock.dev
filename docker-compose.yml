@@ -1,0 +1,9 @@
+services:
+  db:
+    image: 'postgres:13'
+    environment:
+      POSTGRES_USER: "${PGUSER}"
+      POSTGRES_PASSWORD: "${PGPASSWORD}"
+      POSTGRES_DB: "${PGDATABASE}"
+    ports:
+      - "${PGPORT}:5432"
