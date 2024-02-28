@@ -1,0 +1,2 @@
+[alias]
+make = ["bin", "cargo-make"]

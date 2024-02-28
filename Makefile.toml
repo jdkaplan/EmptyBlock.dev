@@ -1,0 +1,56 @@
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+[tasks.dev]
+description = "Start development services, run the app, watch for changes"
+dependencies = ["services"]
+run_task = { name = ["dev-web", "dev-server"], parallel = true }
+
+[tasks.dev-web]
+description = "Start dev server for frontend and watch for changes"
+command = "cargo"
+args = [
+    "bin", "trunk", "serve",
+    "--port", "8000",
+    "--proxy-backend", "http://localhost:8080/api",
+    "./web/index.html",
+]
+
+[tasks.dev-server]
+description = "Run backend server and watch for changes"
+# TODO: Set port explicitly instead of relying on default 8080.
+command = "cargo"
+args = ["run", "--package", "server", "--", "./web/dist"]
+watch = { watch = ["server"] }
+
+[tasks.services]
+alias = "services-up"
+
+[tasks.services-up]
+description = "Start local development services"
+command = "docker"
+args = ["compose", "up", "--detach"]
+
+[tasks.services-stop]
+description = "Stop local development services"
+command = "docker"
+args = ["compose", "stop"]
+
+[tasks.services-down]
+description = "*DESTROY* local development services (this deletes data!)"
+command = "docker"
+args = ["compose", "down"]
+
+[tasks.db-migrate]
+description = "Run local database migrations"
+command = "cargo"
+args = ["bin", "squill", "migrate"]
+
+[tasks.db-wait]
+description = "Wait for local database to be ready"
+script = "until psql -c 'select 1' > /dev/null; do sleep 1; done"
+
+[tasks.db-reset]
+description = "*DELETE* and re-create the local dev database"
+run_task = { name = ["services-down", "services-up", "db-wait", "db-migrate"] }
