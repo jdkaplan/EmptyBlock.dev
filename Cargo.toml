@@ -5,6 +5,10 @@ members = [
   'web',
 ]
 
+[workspace.package]
+license = "BlueOak-1.0.0"
+publish = false
+
 [workspace.metadata.bin]
 sea-orm-cli = { version = '0.12.14' }
 squill = { version = '0.8.0' }
