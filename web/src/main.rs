@@ -1,9 +1,12 @@
-use gloo::net::http::Request;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt::format::Pretty;
 use tracing_subscriber::prelude::*;
-use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew_router::prelude::*;
+
+mod apps;
+mod components;
+mod pages;
 
 #[cfg(debug_assertions)]
 const TRACING_LEVEL: tracing::Level = tracing::Level::DEBUG;
@@ -28,32 +31,29 @@ fn main() {
     yew::Renderer::<App>::new().render();
 }
 
-#[function_component(App)]
-fn app() -> Html {
-    let msg = use_state(|| String::from("Loading data..."));
-    {
-        let msg = msg.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                match fetch_greeting().await {
-                    Ok(greeting) => msg.set(greeting),
-                    Err(err) => tracing::error!("Could not fetch greeting: {:?}", err),
-                }
-            })
-        })
-    }
+#[derive(Clone, PartialEq, Routable)]
+enum Route {
+    #[not_found]
+    #[at("/")]
+    Home,
+    #[at("/tiles")]
+    Tiles,
+}
 
-    html! {
-        <h1>{ &*msg }</h1>
+impl Route {
+    fn render(self) -> Html {
+        match self {
+            Route::Home => html! { <pages::Home /> },
+            Route::Tiles => html! { <pages::Tiles /> },
+        }
     }
 }
 
-async fn fetch_greeting() -> eyre::Result<String> {
-    let res = Request::get("/api/hello").send().await?;
-    if !res.ok() {
-        return Err(eyre::eyre!("error response: {:?}", res));
+#[function_component(App)]
+fn app() -> Html {
+    html! {
+        <BrowserRouter>
+            <Switch<Route> render={Route::render} />
+        </BrowserRouter>
     }
-
-    let text = res.text().await?;
-    Ok(text)
 }
