@@ -5,7 +5,7 @@ members = ['server', 'web']
 [workspace.package]
 license = "BlueOak-1.0.0"
 publish = false
-repository = "https://github.com/jdkaplan/emptyblock.dev"
+repository = "https://github.com/jdkaplan/EmptyBlock.dev"
 
 [workspace.metadata.bin]
 cargo-about = { version = '0.6.1' }

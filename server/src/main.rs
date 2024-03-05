@@ -1,5 +1,6 @@
 use std::env;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use axum::extract::{FromRef, State};
 use axum::http::StatusCode;
@@ -13,6 +14,10 @@ use tower_http::trace::TraceLayer;
 
 mod orm;
 
+const COMMIT_HASH: &str = include_str!(concat!(env!("OUT_DIR"), "/commit_hash"));
+const SOURCE_URL: &str = include_str!(concat!(env!("OUT_DIR"), "/source_url"));
+const BUILD_PROFILE: &str = include_str!(concat!(env!("OUT_DIR"), "/build_profile"));
+
 #[cfg(debug_assertions)]
 const TRACING_LEVEL: tracing::Level = tracing::Level::DEBUG;
 
@@ -21,7 +26,14 @@ const TRACING_LEVEL: tracing::Level = tracing::Level::INFO;
 
 #[derive(FromRef, Clone)]
 struct AppState {
+    globals: Arc<Globals>,
     db: DatabaseConnection,
+}
+
+struct Globals {
+    source_url: String,
+    commit_hash: String,
+    build_profile: String,
 }
 
 type AppResult<T> = Result<T, AppError>;
@@ -53,7 +65,11 @@ async fn main() -> eyre::Result<()> {
     let db_url = must_env("DATABASE_URL")?;
     let db: DatabaseConnection = Database::connect(db_url).await?;
 
-    let state = AppState { db };
+    let globals = Arc::new(Globals {
+        source_url: String::from(SOURCE_URL),
+        commit_hash: String::from(COMMIT_HASH),
+        build_profile: String::from(BUILD_PROFILE),
+    });
 
     // TODO: Use clap when this gets more complicated.
     let args: Vec<String> = env::args().collect();
@@ -75,7 +91,7 @@ async fn main() -> eyre::Result<()> {
         .route("/about", get(about))
         .fallback_service(statics)
         .layer(TraceLayer::new_for_http())
-        .with_state(state);
+        .with_state(AppState { db, globals });
 
     let addr = "0.0.0.0:8080";
     tracing::info!("Listening on http://{}", addr);
@@ -114,7 +130,7 @@ async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoRespo
     Ok(greeting.greeting)
 }
 
-async fn about() -> impl IntoResponse {
+async fn about(State(globals): State<Arc<Globals>>) -> impl IntoResponse {
     let page = markup::new! {
         @markup::doctype()
         html [lang="en"] {
@@ -123,15 +139,21 @@ async fn about() -> impl IntoResponse {
                 meta [name="viewport", content="width=device-width,initial-scale=1"];
 
                 title { "About EmptyBlock.dev" }
-
-                link [rel="stylesheet", href="/dist/css/style.css"];
             }
             body {
                 h1 { "About" }
                 p {
-                    "EmptyBlock.dev is a web development playground. The dream is to have a collection of apps that are somehow useful, interesting, or fun to work on."
+                    a [href="/"] { "EmptyBlock.dev" }
+                    " is a web development playground. The dream is to have a collection of apps that are somehow useful, interesting, or fun to work on."
                 }
                 p { "It'll get there eventually, I'm sure 😎" }
+                p {
+                    "Code for this site is available under the terms of the "
+                    a [href="https://blueoakcouncil.org/license/1.0.0"] { "Blue Oak Model License" }
+                    ". Check out the "
+                    a [href = {&globals.source_url}] { "source code" }
+                    "!"
+                }
 
                 h2 { "Third-party software" }
                 p { "This site is proudly built on top of free and open source software. Thank you to everyone who has contributed to the frameworks, libraries, tools, and everything else that makes it possible to create this." }
@@ -140,6 +162,11 @@ async fn about() -> impl IntoResponse {
                     a [href="/third_party_licenses"] {
                         "View all third-party licenses"
                     }
+                }
+
+                h2 { "Build info" }
+                p {
+                    {&globals.commit_hash} " (" {&globals.build_profile} ")"
                 }
             }
         }

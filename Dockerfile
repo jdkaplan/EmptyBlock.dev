@@ -47,6 +47,10 @@ COPY server/Cargo.toml ./server/Cargo.toml
 RUN cargo fetch
 
 COPY server server
+
+ARG COMMIT_HASH
+ENV COMMIT_HASH="${COMMIT_HASH:-development}"
+
 RUN cargo build --release --package server
 
 ###############################################################################

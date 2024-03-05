@@ -10,6 +10,7 @@
 !/Makefile.toml
 !/migrations
 !/scripts
+!/server/build.rs
 !/server/Cargo.toml
 !/server/src
 !/web/Cargo.toml
