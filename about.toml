@@ -1,0 +1,63 @@
+# Order matters! For projects that give a choice of licenses, cargo-about will
+# choose the earliest one in this list.
+accepted = [
+    # Model
+    "BlueOak-1.0.0",
+
+    # Gold (none yet)
+
+    # Silver
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "ISC",
+    "MIT",
+
+    # Bronze
+    "BSD-3-Clause",
+
+    # Lead (none yet)
+
+    # Other
+    "MPL-2.0",
+]
+
+ignore-dev-dependencies = true
+
+# private.ignore = true
+
+workarounds = [
+    "ring",
+    "rustls",
+]
+
+[ring]
+accepted = ["OpenSSL"]
+
+[typenum.clarify]
+license = "MIT OR Apache-2.0"
+
+[[typenum.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "516b24e051bf5630880ebbd55c40a25ce9552ebaf8970a53e8976eb70e522406"
+
+[[typenum.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "a825bd853ab71619a4923d7b4311221427848070ff44d990da39b0b274c1683f"
+
+[unicode-ident]
+accepted = ["Unicode-DFS-2016"]
+
+[unicode_categories.clarify]
+license = "MIT OR Apache-2.0"
+
+[[unicode_categories.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+
+[[unicode_categories.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "98a817e7b85e5fe4e79d165c656a4a139793b8b643d0f3d9cbcc3538ef82ec82"

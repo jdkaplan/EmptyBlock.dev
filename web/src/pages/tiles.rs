@@ -130,7 +130,6 @@ pub fn Tiles() -> Html {
 
             <footer class={classes!("flex-row", "justify-between")}>
                 <p class="text-small">{"someone please help me style this 😅"}</p>
-                <a target="_blank" href="/about">{"About"}</a>
             </footer>
         </div>
     }

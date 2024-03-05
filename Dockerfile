@@ -21,10 +21,9 @@ RUN curl \
     && rm /tmp/trunk.tar.gz
 
 # Copy in just enough to make `cargo fetch` work.
-RUN mkdir -p web/src \
- && touch web/src/main.rs \
- && echo "workspace.resolver = '2'\nworkspace.members = ['web']" > Cargo.toml
-COPY Cargo.lock ./
+RUN mkdir -p web/src && touch web/src/main.rs
+COPY Cargo.toml Cargo.lock ./
+RUN sed --in-place --expression='s/^members\s*=.*$/members = ["web"]/' Cargo.toml
 COPY web/Cargo.toml ./web/Cargo.toml
 
 RUN cargo fetch --target wasm32-unknown-unknown
@@ -40,10 +39,9 @@ FROM rust:1.76.0 as build
 WORKDIR /usr/local/src/ebd
 
 # Copy in just enough to make `cargo fetch` work.
-RUN mkdir -p server/src \
- && touch server/src/main.rs \
- && echo "workspace.resolver = '2'\nworkspace.members = ['server']" > Cargo.toml
-COPY Cargo.lock ./
+RUN mkdir -p server/src && touch server/src/main.rs
+COPY Cargo.toml Cargo.lock ./
+RUN sed --in-place --expression='s/^members\s*=.*$/members = ["server"]/' Cargo.toml
 COPY server/Cargo.toml ./server/Cargo.toml
 
 RUN cargo fetch
@@ -72,6 +70,32 @@ RUN curl \
     && rm /tmp/squill.tar.xz
 
 ###############################################################################
+# Generate the third-party license file
+###############################################################################
+
+FROM rust:1.76.0 as licenses
+
+ENV BINSTALL_INSTALLER_URL='https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh'
+ENV BINSTALL_INSTALLER_SHA256='b2668d7619a953ad4bc43c340e91bb20eee2f8bda4c36fc5a3fd20f79846c03f'
+
+# TODO: When `ADD --checksum` is more widely supported, use that instead.
+RUN curl \
+    --location "${BINSTALL_INSTALLER_URL}" \
+    --output /tmp/install-binstall.sh \
+    && (cd /tmp && echo "${BINSTALL_INSTALLER_SHA256}  install-binstall.sh" | sha256sum --check) \
+    && chmod +x /tmp/install-binstall.sh \
+    && /tmp/install-binstall.sh \
+    && rm /tmp/install-binstall.sh
+
+RUN cargo binstall --no-confirm 'cargo-run-bin@1.7'
+
+WORKDIR /usr/local/src/ebd
+
+COPY . .
+
+RUN cargo make licenses
+
+###############################################################################
 # Make the runnable image
 ###############################################################################
 FROM debian:12.5-slim
@@ -85,6 +109,10 @@ COPY --from=tools \
 COPY --from=bundle \
     /usr/local/src/ebd/web/dist \
     /app/dist
+
+COPY --from=licenses \
+    /usr/local/src/ebd/third_party_licenses.html \
+    /app/dist/third_party_licenses/index.html
 
 COPY --from=build \
     /usr/local/src/ebd/target/release/server \

@@ -2,9 +2,14 @@
 *
 
 # Add back in anything actually needed for the build.
+!/.cargo
+!/about.html.hbs
+!/about.toml
 !/Cargo.lock
 !/Cargo.toml
+!/Makefile.toml
 !/migrations
+!/scripts
 !/server/Cargo.toml
 !/server/src
 !/web/Cargo.toml

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+OUT="$1"
+
+cargo about generate --fail about.html.hbs --output-file "$OUT"
+
+# Fill in the placeholder for the missing source metadata field.
+#
+# Example:
+#
+#     set_source pkg_with_field_missing 'https://example.com/pkg-source'
+#
+function set_source() {
+    pkg="$1"
+    url="$2"
+
+    # Using sd would be easier, but I ran into glibc version issues last time I tried it.
+    sed --in-place "s%!!SOURCE:${pkg}!!%${url}%g" "$OUT"
+}
+
+if grep '!!' "$OUT"; then
+    echo >&2 'Placeholder still present in file'
+    exit 1
+fi

@@ -7,3 +7,6 @@
 
 # Local dev config and secrets
 /.env
+
+# Generated files
+/third_party_licenses.html

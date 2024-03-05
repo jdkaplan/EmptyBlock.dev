@@ -1,0 +1,30 @@
+<h1>Third-party licenses</h1>
+
+<p>This page contains the license text for all third-party software included
+in this website.</p>
+
+<a href="/about">About the site itself</a>
+
+{{#each licenses}}
+<h3 id="{{id}}">{{name}} (<a href="https://spdx.org/licenses/{{id}}.html">{{id}}</a>)</h3>
+
+<p>Used by:</p>
+<ul>
+  {{#each used_by}}
+  <li>
+    {{crate.name}} {{crate.version}}
+
+    {{#with crate.repository as |repo|}}
+    <a href="{{crate.repository}}">(source)</a>
+    {{else}}
+    <a href="!!SOURCE:{{{crate.name}}}!!">(source)</a>
+    {{/with}}
+  </li>
+  {{/each}}
+</ul>
+
+<p>Full text:</p>
+<pre style="max-height: 75vh; max-width: fit-content; overflow: auto; white-space: pre; border: 1px gray solid;">
+{{text}}
+</pre>
+{{/each}}

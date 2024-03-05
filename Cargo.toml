@@ -1,15 +1,15 @@
 [workspace]
 resolver = '2'
-members = [
-  'server',
-  'web',
-]
+members = ['server', 'web']
 
 [workspace.package]
 license = "BlueOak-1.0.0"
 publish = false
+repository = "https://github.com/jdkaplan/emptyblock.dev"
 
 [workspace.metadata.bin]
+cargo-about = { version = '0.6.1' }
+cargo-deny = { version = '0.12.2' }
 cargo-make = { version = '0.37.10' }
 sea-orm-cli = { version = '0.12.14' }
 squill = { version = '0.8.0' }

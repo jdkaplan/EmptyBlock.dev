@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
 
 [dependencies]
 base64 = "0.21.7"

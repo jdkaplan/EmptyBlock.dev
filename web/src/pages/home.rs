@@ -2,9 +2,13 @@ use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
+use crate::Route;
+
+type Link = yew_router::components::Link<Route>;
+
 #[function_component]
 pub fn Home() -> Html {
-    let msg = use_state(|| String::from("Loading data..."));
+    let msg = use_state(|| String::from("Loading greeting..."));
     {
         let msg = msg.clone();
         use_effect_with((), move |_| {
@@ -18,7 +22,17 @@ pub fn Home() -> Html {
     }
 
     html! {
-        <h1 class="greeting">{ &*msg }</h1>
+        <main>
+            <h1>{"EmptyBlock.dev"}</h1>
+
+            <p class="greeting">{ &*msg }</p>
+
+            <ul>
+                <li><Link to={Route::Home}>{"Home"}</Link></li>
+                <li><Link to={Route::Tiles}>{"Tiles"}</Link></li>
+                <li><a href="/about">{"About"}</a></li>
+            </ul>
+        </main>
     }
 }
 

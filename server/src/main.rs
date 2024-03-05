@@ -63,6 +63,7 @@ async fn main() -> eyre::Result<()> {
     let statics = ServeDir::new(static_dir);
     let app = Router::new()
         .route("/api/hello", get(hello))
+        .route("/about", get(about))
         .fallback_service(statics)
         .layer(TraceLayer::new_for_http())
         .with_state(state);
@@ -98,6 +99,40 @@ async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoRespo
     };
 
     Ok(greeting.greeting)
+}
+
+async fn about() -> impl IntoResponse {
+    let page = markup::new! {
+        @markup::doctype()
+        html [lang="en"] {
+            head {
+                meta [charset="utf-8"];
+                meta [name="viewport", content="width=device-width,initial-scale=1"];
+
+                title { "About EmptyBlock.dev" }
+
+                link [rel="stylesheet", href="/dist/css/style.css"];
+            }
+            body {
+                h1 { "About" }
+                p {
+                    "EmptyBlock.dev is a web development playground. The dream is to have a collection of apps that are somehow useful, interesting, or fun to work on."
+                }
+                p { "It'll get there eventually, I'm sure 😎" }
+
+                h2 { "Third-party software" }
+                p { "This site is proudly built on top of free and open source software. Thank you to everyone who has contributed to the frameworks, libraries, tools, and everything else that makes it possible to create this." }
+
+                p {
+                    a [href="/third_party_licenses"] {
+                        "View all third-party licenses"
+                    }
+                }
+            }
+        }
+    };
+
+    axum::response::Html(page.to_string())
 }
 
 fn init_tracing() -> eyre::Result<()> {

@@ -1,2 +1,4 @@
 [alias]
+about = ["bin", "cargo-about"]
+deny = ["bin", "cargo-deny"]
 make = ["bin", "cargo-make"]

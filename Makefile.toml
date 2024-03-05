@@ -54,3 +54,13 @@ script = "until psql -c 'select 1' > /dev/null; do sleep 1; done"
 [tasks.db-reset]
 description = "*DELETE* and re-create the local dev database"
 run_task = { name = ["services-down", "services-up", "db-wait", "db-migrate"] }
+
+[tasks.deny]
+description = "Run cargo-deny checks"
+command = "cargo"
+args = ["deny", "check"]
+
+[tasks.licenses]
+description = "Generate third-party license information"
+command = "scripts/generate-third-party-licenses"
+args = ["third_party_licenses.html"]

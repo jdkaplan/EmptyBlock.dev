@@ -1,0 +1,40 @@
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "warn"
+notice = "warn"
+
+[bans]
+multiple-versions = "warn"
+highlight = "all"
+wildcards = "warn"
+
+[licenses]
+# Require extra-high confidence. Default was 0.8
+confidence-threshold = 0.93
+
+default = "deny"
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BlueOak-1.0.0",
+    "BSD-3-Clause",
+    "ISC",
+    "MIT",
+    "MPL-2.0",
+]
+
+[[licenses.exceptions]]
+name = "ring"
+allow = ["OpenSSL"]
+
+[[licenses.exceptions]]
+name = "unicode-ident"
+allow = ["Unicode-DFS-2016"]
+
+[[licenses.clarify]]
+name = "ring"
+expression = "ISC AND OpenSSL AND MIT"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 },
+]
