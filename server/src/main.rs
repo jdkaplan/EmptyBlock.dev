@@ -1,4 +1,5 @@
 use std::env;
+use std::path::PathBuf;
 
 use axum::extract::{FromRef, State};
 use axum::http::StatusCode;
@@ -7,7 +8,7 @@ use axum::routing::get;
 use axum::Router;
 use eyre::{Context, OptionExt};
 use sea_orm::{Database, DatabaseConnection};
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 
 mod orm;
@@ -58,11 +59,19 @@ async fn main() -> eyre::Result<()> {
     let args: Vec<String> = env::args().collect();
     let static_dir = args
         .get(1)
+        .map(PathBuf::from)
         .ok_or_eyre("missing required argument: static_dir")?;
+    let spa = static_dir.join("index.html");
 
-    let statics = ServeDir::new(static_dir);
+    let statics = ServeDir::new(static_dir).fallback(ServeFile::new(spa));
+
     let app = Router::new()
-        .route("/api/hello", get(hello))
+        .nest(
+            "/api",
+            Router::new()
+                .route("/hello", get(hello))
+                .fallback(not_found),
+        )
         .route("/about", get(about))
         .fallback_service(statics)
         .layer(TraceLayer::new_for_http())
@@ -77,6 +86,10 @@ async fn main() -> eyre::Result<()> {
     // TODO: Add graceful shutdown to actually see this print.
     tracing::info!("Goodbye! ✌");
     Ok(())
+}
+
+async fn not_found() -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, "Not Found")
 }
 
 async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoResponse> {
