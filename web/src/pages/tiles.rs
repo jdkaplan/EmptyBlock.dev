@@ -1,4 +1,3 @@
-use base64::Engine as _;
 use gloo::utils::{body, document};
 use serde::Deserialize;
 use web_sys::js_sys::Array;
@@ -6,16 +5,8 @@ use web_sys::wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+use crate::apps::tiles::Module;
 use crate::components::*;
-
-const DEFAULT_UPDATE: &str = include_str!("../data/default.wat");
-
-const BASE64_URL_SAFE_LENIENT: base64::engine::GeneralPurpose = base64::engine::GeneralPurpose::new(
-    &base64::alphabet::URL_SAFE,
-    base64::engine::GeneralPurposeConfig::new()
-        .with_encode_padding(false)
-        .with_decode_padding_mode(base64::engine::DecodePaddingMode::Indifferent),
-);
 
 #[derive(Clone, PartialEq, Default, Deserialize)]
 struct Query {
@@ -87,11 +78,10 @@ pub fn Tiles() -> Html {
             tracing::debug!({ ?val }, "Editor result");
 
             if let Some(val) = val {
-                let module = Module::new(val.source).unwrap();
-                set_hash(&module);
+                set_hash(&val.module);
                 set_query(val.seed);
 
-                update.set(module);
+                update.set(val.module);
                 seed.set(val.seed);
             };
 
@@ -101,10 +91,10 @@ pub fn Tiles() -> Html {
 
     let inner = match *view_state {
         ViewState::Run => html! {
-            <Simulation update={update.binary.clone()} seed={*seed} class="aspect-square min-h-0 min-w-0" />
+            <Simulation update={update.binary.clone()} seed={*seed} />
         },
         ViewState::Edit => html! {
-            <Editor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="flex flex-col" />
+            <Editor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="p-1" />
         },
     };
 
@@ -128,7 +118,7 @@ pub fn Tiles() -> Html {
     // TODO: There must be some way to satisfy both "full screen app" and "square grid cells"....
 
     html! {
-        <div class="flex flex-col items-stretch justify-between">
+        <div class="flex flex-col items-stretch justify-between h-full w-full">
             <nav class="flex flex-row justify-between">
                 <a href={crate::Route::Home.to_path()}>{"EmptyBlock.dev"}</a>
                 { right_nav }
@@ -140,76 +130,6 @@ pub fn Tiles() -> Html {
                 <p class="text-small">{"someone please help me style this 😅"}</p>
             </footer>
         </div>
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Module {
-    text: String,
-    binary: Vec<u8>,
-}
-
-#[derive(Debug, thiserror::Error)]
-enum DecodeModuleError {
-    #[error("empty string")]
-    Empty,
-
-    #[error("invalid base64: {0}")]
-    Base64(#[from] base64::DecodeError),
-
-    #[error("invalid UTF-8: {0}")]
-    Utf8(#[from] std::string::FromUtf8Error),
-
-    #[error("invalid WAT: {0}")]
-    Wat(#[from] wat::Error),
-}
-
-impl std::fmt::Display for Module {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.text)
-    }
-}
-
-impl Default for Module {
-    fn default() -> Self {
-        let text = String::from(DEFAULT_UPDATE);
-        let binary = wat::parse_str(&text).expect("default WAT is valid");
-        Self { text, binary }
-    }
-}
-
-impl Module {
-    fn new(text: String) -> Result<Self, wat::Error> {
-        let binary = wat::parse_str(&text)?;
-        Ok(Self { text, binary })
-    }
-
-    fn decode(hash: &str) -> Option<Self> {
-        match Self::try_decode(hash) {
-            Ok(v) => Some(v),
-            Err(DecodeModuleError::Empty) => None,
-            Err(err) => {
-                tracing::error!({ ?hash, ?err }, "invalid URL hash");
-                None
-            }
-        }
-    }
-
-    fn try_decode(hash: &str) -> Result<Self, DecodeModuleError> {
-        // Remove the leading hash character (#) for convenience.
-        let hash = hash.trim_start_matches('#');
-        if hash.is_empty() {
-            return Err(DecodeModuleError::Empty);
-        }
-
-        let decoded = BASE64_URL_SAFE_LENIENT.decode(hash)?;
-        let text = String::from_utf8(decoded)?;
-        let binary = wat::parse_str(&text)?;
-        Ok(Self { text, binary })
-    }
-
-    fn encode(&self) -> String {
-        BASE64_URL_SAFE_LENIENT.encode(&self.text)
     }
 }
 

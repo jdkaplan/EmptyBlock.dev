@@ -1,6 +1,16 @@
+use base64::Engine as _;
 use eyre::WrapErr;
 use rand::rngs::StdRng;
 use rand::{RngCore, SeedableRng};
+
+const DEFAULT_UPDATE: &str = include_str!("../data/default.wat");
+
+const BASE64_URL_SAFE_LENIENT: base64::engine::GeneralPurpose = base64::engine::GeneralPurpose::new(
+    &base64::alphabet::URL_SAFE,
+    base64::engine::GeneralPurposeConfig::new()
+        .with_encode_padding(false)
+        .with_decode_padding_mode(base64::engine::DecodePaddingMode::Indifferent),
+);
 
 pub const GRID_SIZE: usize = 16;
 
@@ -141,5 +151,75 @@ mod host {
 
     pub fn i32_sub_sat(_: wasmi::Caller<'_, ()>, a: u32, b: u32) -> u32 {
         a.saturating_sub(b)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Module {
+    pub text: String,
+    pub binary: Vec<u8>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum DecodeModuleError {
+    #[error("empty string")]
+    Empty,
+
+    #[error("invalid base64: {0}")]
+    Base64(#[from] base64::DecodeError),
+
+    #[error("invalid UTF-8: {0}")]
+    Utf8(#[from] std::string::FromUtf8Error),
+
+    #[error("invalid WAT: {0}")]
+    Wat(#[from] wat::Error),
+}
+
+impl std::fmt::Display for Module {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.text)
+    }
+}
+
+impl Default for Module {
+    fn default() -> Self {
+        let text = String::from(DEFAULT_UPDATE);
+        let binary = wat::parse_str(&text).expect("default WAT is valid");
+        Self { text, binary }
+    }
+}
+
+impl Module {
+    pub fn new(text: String) -> Result<Self, wat::Error> {
+        let binary = wat::parse_str(&text)?;
+        Ok(Self { text, binary })
+    }
+
+    pub fn decode(hash: &str) -> Option<Self> {
+        match Self::try_decode(hash) {
+            Ok(v) => Some(v),
+            Err(DecodeModuleError::Empty) => None,
+            Err(err) => {
+                tracing::error!({ ?hash, ?err }, "invalid URL hash");
+                None
+            }
+        }
+    }
+
+    pub fn try_decode(hash: &str) -> Result<Self, DecodeModuleError> {
+        // Remove the leading hash character (#) for convenience.
+        let hash = hash.trim_start_matches('#');
+        if hash.is_empty() {
+            return Err(DecodeModuleError::Empty);
+        }
+
+        let decoded = BASE64_URL_SAFE_LENIENT.decode(hash)?;
+        let text = String::from_utf8(decoded)?;
+        let binary = wat::parse_str(&text)?;
+        Ok(Self { text, binary })
+    }
+
+    pub fn encode(&self) -> String {
+        BASE64_URL_SAFE_LENIENT.encode(&self.text)
     }
 }
