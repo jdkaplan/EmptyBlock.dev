@@ -25,7 +25,7 @@ pub fn Home() -> Html {
         <main>
             <h1>{"EmptyBlock.dev"}</h1>
 
-            <p class="greeting">{ &*msg }</p>
+            <p class="text-green-600">{ &*msg }</p>
 
             <ul>
                 <li><Link to={Route::Home}>{"Home"}</Link></li>

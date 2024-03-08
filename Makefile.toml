@@ -5,16 +5,17 @@ skip_core_tasks = true
 [tasks.dev]
 description = "Start development services, run the app, watch for changes"
 dependencies = ["services"]
-run_task = { name = ["dev-web", "dev-server"], parallel = true }
+run_task = { name = ["dev-web", "dev-server"], parallel = true, fork = true }
 
 [tasks.dev-web]
 description = "Start dev server for frontend and watch for changes"
 command = "cargo"
+cwd = "web"
 args = [
     "bin", "trunk", "serve",
     "--port", "8000",
     "--proxy-backend", "http://localhost:8080/api",
-    "./web/index.html",
+    "./index.html",
 ]
 
 [tasks.dev-server]

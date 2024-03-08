@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+a {
+  @apply underline;
+}
+
+@layer components {
+  h1 {
+    @apply text-4xl font-bold mt-4;
+  }
+
+  h2 {
+    @apply text-3xl font-bold mt-4;
+  }
+
+  h3 {
+    @apply text-2xl font-bold mt-8 mb-2;
+  }
+
+  h4 {
+    @apply font-bold;
+  }
+
+  h5 {
+    @apply font-bold;
+  }
+
+  h6 {
+    @apply font-bold;
+  }
+
+  p {
+    @apply mb-4;
+  }
+
+  [type="text"],
+  [type="email"],
+  [type="url"],
+  [type="password"],
+  [type="number"],
+  [type="date"],
+  [type="datetime-local"],
+  [type="month"],
+  [type="search"],
+  [type="tel"],
+  [type="time"],
+  [type="week"],
+  [multiple],
+  textarea,
+  select {
+    @apply border border-gray-400 dark:border-gray-800 bg-gray-50 dark:bg-black dark:text-white;
+  }
+
+  button,
+  [type="button"],
+  [type="reset"],
+  [type="submit"] {
+    @apply px-1 border border-solid text-black border-gray-400 bg-gray-50 dark:text-white dark:border-gray-700 dark:bg-gray-800;
+
+    &:hover {
+      @apply bg-gray-400 dark:bg-gray-700;
+    }
+  }
+
+  .list-bulleted {
+    @apply list-disc list-inside ml-2;
+  }
+
+  .notice {
+    @apply p-1 border border-gray-500 bg-gray-200 dark:border-gray-800 dark:bg-gray-900;
+  }
+
+  .alert {
+    @apply p-1 border border-red-500 bg-red-200 dark:border-red-800 dark:bg-red-900;
+  }
+}

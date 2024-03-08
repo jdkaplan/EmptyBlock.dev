@@ -14,5 +14,6 @@
 !/server/src
 !/web/Cargo.toml
 !/web/index.html
-!/web/index.scss
 !/web/src
+!/web/tailwind.config.js
+!/web/tailwind.scss

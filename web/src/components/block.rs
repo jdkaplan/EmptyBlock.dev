@@ -17,8 +17,8 @@ pub fn Block(props: &BlockProps) -> Html {
     let fg = style("background-color", &props.foreground.css());
 
     html! {
-        <div class={classes!("full", props.class.clone())} style={bg}>
-            <div class="full" style={fg} />
+        <div class={classes!("h-full", "w-full", props.class.clone())} style={bg}>
+            <div class="h-full w-full" style={fg} />
         </div>
     }
 }

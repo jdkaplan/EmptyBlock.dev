@@ -1,6 +1,8 @@
 use base64::Engine as _;
 use gloo::utils::{body, document};
 use serde::Deserialize;
+use web_sys::js_sys::Array;
+use web_sys::wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -48,17 +50,23 @@ pub fn Tiles() -> Html {
         let title = document().title();
         document().set_title("Tiles");
 
-        body()
-            .class_list()
-            .add_4("flex-row", "fullscreen", "align-center", "justify-center")
-            .unwrap();
+        let classes = vec![
+            "flex",
+            "flex-row",
+            "h-screen",
+            "w-screen",
+            "items-center",
+            "justify-center",
+        ]
+        .into_iter()
+        .map(JsValue::from_str)
+        .collect::<Array>();
+
+        body().class_list().add(&classes).unwrap();
 
         move || {
             document().set_title(&title);
-            body()
-                .class_list()
-                .remove_4("flex-row", "fullscreen", "align-center", "justify-center")
-                .unwrap();
+            body().class_list().remove(&classes).unwrap();
         }
     });
 
@@ -93,10 +101,10 @@ pub fn Tiles() -> Html {
 
     let inner = match *view_state {
         ViewState::Run => html! {
-            <Simulation update={update.binary.clone()} seed={*seed} class={classes!("square", "min-0")} />
+            <Simulation update={update.binary.clone()} seed={*seed} class="aspect-square min-h-0 min-w-0" />
         },
         ViewState::Edit => html! {
-            <Editor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class={classes!("flex-col")} />
+            <Editor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="flex flex-col" />
         },
     };
 
@@ -120,15 +128,15 @@ pub fn Tiles() -> Html {
     // TODO: There must be some way to satisfy both "full screen app" and "square grid cells"....
 
     html! {
-        <div class={classes!("full-aspect", "flex-col", "align-stretch", "justify-between")}>
-            <nav class={classes!("flex-row", "justify-between")}>
+        <div class="flex flex-col items-stretch justify-between">
+            <nav class="flex flex-row justify-between">
                 <a href={crate::Route::Home.to_path()}>{"EmptyBlock.dev"}</a>
                 { right_nav }
             </nav>
 
             {inner}
 
-            <footer class={classes!("flex-row", "justify-between")}>
+            <footer class="flex flex-row justify-between">
                 <p class="text-small">{"someone please help me style this 😅"}</p>
             </footer>
         </div>

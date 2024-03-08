@@ -60,7 +60,7 @@ impl Component for Editor {
 
                 <label for="source">{"Module"}</label>
                 <textarea name="source" ref={self.source_ref.clone()} value={source} rows={rows.to_string()} />
-                <div class={classes!("flex-row", "justify-around")}>
+                <div class="flex flex-row justify-around">
                     <button type="button" onclick={oncancel}>{"Cancel"}</button>
                     <button type="button" onclick={onsubmit}>{"Submit"}</button>
                 </div>

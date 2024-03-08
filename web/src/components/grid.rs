@@ -25,13 +25,13 @@ pub fn Grid(props: &GridProps) -> Html {
             let foreground = props.next[(r, c)];
 
             children.push(html! {
-                <Block key={key} background={background} foreground={foreground} class={classes!("square", "min-1")} />
+                <Block key={key} background={background} foreground={foreground} class="aspect-square min-h-1 min-w-1" />
             });
         }
     }
 
     html! {
-        <div class={classes!("grid", props.class.clone())}>
+        <div class={classes!("grid", "grid-rows-[repeat(16,_1fr)]", "grid-cols-[repeat(16,_1fr)]", props.class.clone())}>
             { children }
         </div>
     }
