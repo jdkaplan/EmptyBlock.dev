@@ -7,3 +7,5 @@ macro_rules! page {
 
 page!(home);
 page!(tiles);
+page!(trellis);
+page!(trellis_config);

@@ -1,12 +1,11 @@
-use gloo::utils::{body, document};
+use gloo::utils::document;
 use serde::Deserialize;
-use web_sys::js_sys::Array;
-use web_sys::wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::apps::tiles::Module;
 use crate::components::*;
+use crate::hooks::*;
 
 #[derive(Clone, PartialEq, Default, Deserialize)]
 struct Query {
@@ -37,29 +36,15 @@ pub fn Tiles() -> Html {
         query.seed.unwrap_or_else(rand::random)
     });
 
-    use_effect(move || {
-        let title = document().title();
-        document().set_title("Tiles");
-
-        let classes = vec![
-            "flex",
-            "flex-row",
-            "h-screen",
-            "w-screen",
-            "items-center",
-            "justify-center",
-        ]
-        .into_iter()
-        .map(JsValue::from_str)
-        .collect::<Array>();
-
-        body().class_list().add(&classes).unwrap();
-
-        move || {
-            document().set_title(&title);
-            body().class_list().remove(&classes).unwrap();
-        }
-    });
+    use_title("Tiles");
+    use_body_class(vec![
+        "flex",
+        "flex-row",
+        "h-screen",
+        "w-screen",
+        "items-center",
+        "justify-center",
+    ]);
 
     tracing::debug!({ ?seed }, "Tiles");
     tracing::debug!("\n{}", *update);
@@ -74,7 +59,7 @@ pub fn Tiles() -> Html {
         let update = update.clone();
         let seed = seed.clone();
 
-        Callback::from(move |val: Option<EditorValue>| {
+        Callback::from(move |val: Option<SimulationEditorValue>| {
             tracing::debug!({ ?val }, "Editor result");
 
             if let Some(val) = val {
@@ -94,7 +79,7 @@ pub fn Tiles() -> Html {
             <Simulation update={update.binary.clone()} seed={*seed} />
         },
         ViewState::Edit => html! {
-            <Editor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="p-1" />
+            <SimulationEditor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="p-1" />
         },
     };
 

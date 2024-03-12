@@ -30,6 +30,7 @@ pub fn Home() -> Html {
             <ul>
                 <li><Link to={Route::Home}>{"Home"}</Link></li>
                 <li><Link to={Route::Tiles}>{"Tiles"}</Link></li>
+                <li><Link to={Route::Trellis}>{"Trellis"}</Link></li>
                 <li><a href="/about">{"About"}</a></li>
             </ul>
         </main>

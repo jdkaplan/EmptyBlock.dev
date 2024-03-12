@@ -68,6 +68,10 @@ a {
     @apply list-disc list-inside ml-2;
   }
 
+  .info {
+    @apply p-1 border border-blue-500 bg-blue-200 dark:border-blue-800 dark:bg-blue-900;
+  }
+
   .notice {
     @apply p-1 border border-gray-500 bg-gray-200 dark:border-gray-800 dark:bg-gray-900;
   }

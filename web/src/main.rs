@@ -6,6 +6,7 @@ use yew_router::prelude::*;
 
 mod apps;
 mod components;
+mod hooks;
 mod pages;
 
 #[cfg(debug_assertions)]
@@ -38,6 +39,11 @@ enum Route {
     Home,
     #[at("/tiles")]
     Tiles,
+    #[at("/trellis")]
+    Trellis,
+    #[at("/trellis/config")]
+    TrellisConfig,
+    // TODO: Make dedicated edit routes
 }
 
 impl Route {
@@ -45,6 +51,8 @@ impl Route {
         match self {
             Route::Home => html! { <pages::Home /> },
             Route::Tiles => html! { <pages::Tiles /> },
+            Route::Trellis => html! { <pages::Trellis /> },
+            Route::TrellisConfig => html! { <pages::TrellisConfig /> },
         }
     }
 }

@@ -4,23 +4,23 @@ use yew::prelude::*;
 use crate::apps::tiles::Module;
 
 #[derive(Properties, PartialEq, Debug)]
-pub struct EditorProps {
+pub struct SimulationEditorProps {
     #[prop_or_default]
     pub class: Classes,
 
     pub seed: u64,
     pub source: String,
 
-    pub onsubmit: Callback<Option<EditorValue>>,
+    pub onsubmit: Callback<Option<SimulationEditorValue>>,
 }
 
 #[derive(PartialEq, Debug)]
-pub struct EditorValue {
+pub struct SimulationEditorValue {
     pub seed: u64,
     pub module: Module,
 }
 
-pub struct Editor {
+pub struct SimulationEditor {
     seed_ref: NodeRef,
     source_ref: NodeRef,
 
@@ -28,15 +28,15 @@ pub struct Editor {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum EditorMsg {
+pub enum SimulationEditorMsg {
     Save,
     Cancel,
 }
 
-impl Component for Editor {
-    type Message = EditorMsg;
+impl Component for SimulationEditor {
+    type Message = SimulationEditorMsg;
 
-    type Properties = EditorProps;
+    type Properties = SimulationEditorProps;
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
@@ -49,8 +49,8 @@ impl Component for Editor {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
 
-        let onsubmit = ctx.link().callback(|_| EditorMsg::Save);
-        let oncancel = ctx.link().callback(|_| EditorMsg::Cancel);
+        let onsubmit = ctx.link().callback(|_| SimulationEditorMsg::Save);
+        let oncancel = ctx.link().callback(|_| SimulationEditorMsg::Cancel);
 
         // TODO: Explain the module requirements
 
@@ -68,6 +68,7 @@ impl Component for Editor {
 
                     <label for="source">{"Module"}</label>
                     <textarea name="source" ref={self.source_ref.clone()} />
+
                     <div class="flex flex-row justify-around">
                         <button type="button" onclick={oncancel}>{"Cancel"}</button>
                         <button type="button" onclick={onsubmit}>{"Submit"}</button>
@@ -95,13 +96,13 @@ impl Component for Editor {
         let props = ctx.props();
 
         match msg {
-            EditorMsg::Save => {
+            SimulationEditorMsg::Save => {
                 let seed = self.seed_ref.cast::<HtmlInputElement>().unwrap();
                 let source = self.source_ref.cast::<HtmlTextAreaElement>().unwrap();
 
                 match Module::new(source.value()) {
                     Ok(module) => {
-                        props.onsubmit.emit(Some(EditorValue {
+                        props.onsubmit.emit(Some(SimulationEditorValue {
                             seed: seed.value().parse().unwrap_or_default(),
                             module,
                         }));
@@ -113,7 +114,7 @@ impl Component for Editor {
                     }
                 }
             }
-            EditorMsg::Cancel => {
+            SimulationEditorMsg::Cancel => {
                 props.onsubmit.emit(None);
                 false
             }
