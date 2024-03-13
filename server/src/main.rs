@@ -9,6 +9,7 @@ use axum::routing::get;
 use axum::Router;
 use eyre::{Context, OptionExt};
 use sea_orm::{Database, DatabaseConnection};
+use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 
@@ -97,9 +98,10 @@ async fn main() -> eyre::Result<()> {
     tracing::info!("Listening on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
-    // TODO: Add graceful shutdown to actually see this print.
     tracing::info!("Goodbye! ✌");
     Ok(())
 }
@@ -182,4 +184,28 @@ fn init_tracing() -> eyre::Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    tracing::info!("Signal received, starting graceful shutdown");
 }
