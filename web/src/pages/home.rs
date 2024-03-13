@@ -1,6 +1,6 @@
 use gloo::net::http::Request;
-use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew::suspense::use_future;
 
 use crate::Route;
 
@@ -8,24 +8,15 @@ type Link = yew_router::components::Link<Route>;
 
 #[function_component]
 pub fn Home() -> Html {
-    let msg = use_state(|| String::from("Loading greeting..."));
-    {
-        let msg = msg.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                match fetch_greeting().await {
-                    Ok(greeting) => msg.set(greeting),
-                    Err(err) => tracing::error!("Could not fetch greeting: {:?}", err),
-                }
-            })
-        })
-    }
+    let fallback_greeting = html! { <p>{"Loading greeting..."}</p> };
 
     html! {
         <main>
             <h1>{"EmptyBlock.dev"}</h1>
 
-            <p class="text-green-600">{ &*msg }</p>
+            <Suspense fallback={fallback_greeting}>
+                <Greeting />
+            </Suspense>
 
             <ul>
                 <li><Link to={Route::Home}>{"Home"}</Link></li>
@@ -45,4 +36,21 @@ async fn fetch_greeting() -> eyre::Result<String> {
 
     let text = res.text().await?;
     Ok(text)
+}
+
+#[function_component]
+fn Greeting() -> HtmlResult {
+    let greeting = use_future(fetch_greeting)?;
+
+    match &*greeting {
+        Ok(greeting) => Ok(html! {
+            <p class="text-green-600 dark:text-green-400">{greeting}</p>
+        }),
+        Err(err) => Ok(html! {
+            <div class="alert">
+                <p>{"Could not fetch greeting:"}</p>
+                <pre>{err.to_string()}</pre>
+            </div>
+        }),
+    }
 }
