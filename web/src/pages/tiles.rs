@@ -1,13 +1,15 @@
-use gloo::utils::document;
-use serde::Deserialize;
+use eyre::WrapErr;
+use gloo::history::{BrowserHistory, History};
+use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::apps::tiles::Module;
 use crate::components::*;
 use crate::hooks::*;
+use crate::Route;
 
-#[derive(Clone, PartialEq, Default, Deserialize)]
+#[derive(Clone, PartialEq, Default, Deserialize, Serialize)]
 struct Query {
     seed: Option<u64>,
 }
@@ -20,23 +22,28 @@ enum ViewState {
 
 #[function_component]
 pub fn Tiles() -> Html {
+    use_title("Tiles");
+
     let location = use_location().unwrap();
+    let history = BrowserHistory::new();
     let view_state = use_state(|| ViewState::Run);
 
-    let update = use_state(|| {
-        Module::decode(location.hash()).unwrap_or_else(|| {
-            let src = Module::default();
-            set_hash(&src);
-            src
-        })
-    });
+    let update = use_state(|| Module::decode(location.hash()).unwrap_or_default());
 
     let seed = use_state(|| {
         let query = location.query::<Query>().unwrap_or_default();
         query.seed.unwrap_or_else(rand::random)
     });
 
-    use_title("Tiles");
+    use_effect_with((), {
+        let history = history.clone();
+        let update = update.clone();
+        let seed = seed.clone();
+        move |_| {
+            replace_url(&history, &update, *seed).unwrap();
+        }
+    });
+
     use_body_class(vec![
         "flex",
         "flex-row",
@@ -56,18 +63,12 @@ pub fn Tiles() -> Html {
 
     let onsubmit = {
         let view_state = view_state.clone();
-        let update = update.clone();
-        let seed = seed.clone();
 
         Callback::from(move |val: Option<SimulationEditorValue>| {
             tracing::debug!({ ?val }, "Editor result");
 
             if let Some(val) = val {
-                set_hash(&val.module);
-                set_query(val.seed);
-
-                update.set(val.module);
-                seed.set(val.seed);
+                push_url(&history, &val.module, val.seed).unwrap();
             };
 
             view_state.set(ViewState::Run);
@@ -118,16 +119,20 @@ pub fn Tiles() -> Html {
     }
 }
 
-fn set_query(seed: u64) {
-    let location = document().location().expect("browser has a location");
-    location
-        .set_search(&format!("seed={}", seed))
-        .expect("query is mutable");
+fn replace_url(history: &BrowserHistory, module: &Module, seed: u64) -> eyre::Result<()> {
+    history
+        .replace_with_query(
+            format!("{}#{}", Route::Tiles.to_path(), module.encode()),
+            Query { seed: Some(seed) },
+        )
+        .wrap_err("replace history")
 }
 
-fn set_hash(module: &Module) {
-    let location = document().location().expect("browser has a location");
-    location
-        .set_hash(&module.encode())
-        .expect("hash is mutable");
+fn push_url(history: &BrowserHistory, module: &Module, seed: u64) -> eyre::Result<()> {
+    history
+        .push_with_query(
+            format!("{}#{}", Route::Tiles.to_path(), module.encode()),
+            Query { seed: Some(seed) },
+        )
+        .wrap_err("replace history")
 }
