@@ -1,5 +1,6 @@
 use yew::prelude::*;
 
+use crate::apps::trellis;
 use crate::apps::trellis::{Config, Data};
 use crate::components::*;
 
@@ -13,6 +14,8 @@ pub struct BoardProps {
 
 #[function_component]
 pub fn Board(props: &BoardProps) -> Html {
+    let config_ctx = use_context::<TrellisConfigContext>().unwrap();
+
     let class = classes!(
         "grid",
         "grid-cols-1",
@@ -26,15 +29,19 @@ pub fn Board(props: &BoardProps) -> Html {
 
     html! {
         <div {class}>
-            { for render_tiles(&props.config) }
+            { for render_tiles(config_ctx) }
         </div>
     }
 }
 
-fn render_tiles(config: &Config) -> Vec<Html> {
+fn render_tiles(config_ctx: TrellisConfigContext) -> Vec<Html> {
+    let config = config_ctx.inner.clone().unwrap();
     let mut children = Vec::new();
 
     for tile in &config.layout.tiles {
+        let id = tile.id;
+        let config_ctx = config_ctx.clone();
+
         let child = match &tile.data {
             Data::Clock => html! { <Clock /> },
             Data::Weather(weather) => {
@@ -44,13 +51,36 @@ fn render_tiles(config: &Config) -> Vec<Html> {
             }
             Data::Note(note) => {
                 let initial = note.text.clone();
-                // TODO: Use onchange to save data
-                html! { <Note {initial} />}
+                let onchange = Callback::from(move |text| {
+                    config_ctx.dispatch(TrellisConfigAction::Update {
+                        id,
+                        data: Data::Note(trellis::Note {
+                            // BUG: This overwrites changes from other sources.
+                            // TODO: Build this update out of reducers too?
+                            text,
+                        }),
+                    });
+                });
+
+                html! { <Note {initial} {onchange} />}
             }
             Data::Counter(counter) => {
-                let start = counter.value;
-                // TODO: Use onchange to save data
-                html! { <Counter {start} />}
+                let value = counter.value;
+
+                let onchange = {
+                    Callback::from(move |delta| {
+                        config_ctx.dispatch(TrellisConfigAction::Update {
+                            id,
+                            data: Data::Counter(trellis::Counter {
+                                // BUG: This overwrites changes from other sources.
+                                // TODO: Build this update out of reducers too?
+                                value: value + delta,
+                            }),
+                        });
+                    })
+                };
+
+                html! { <Counter {value} {onchange} />}
             }
         };
         children.push(child);

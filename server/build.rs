@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
     let out = PathBuf::from(&env::var("OUT_DIR").unwrap());
 
     fs::write(out.join("build_profile"), env::var("PROFILE").unwrap()).unwrap();

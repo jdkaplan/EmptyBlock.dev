@@ -1,42 +1,23 @@
-use gloo::storage::errors::StorageError;
-use gloo::storage::{LocalStorage, Storage};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::apps::trellis::Config;
 use crate::components::*;
 use crate::hooks::*;
 use crate::Route;
 
 type Link = yew_router::components::Link<Route>;
 
-const LOCAL_STORAGE_KEY: &str = "trellis.config";
-
 #[function_component]
 pub fn Trellis() -> Html {
     use_title("Trellis");
+    let config_ctx = use_context::<TrellisConfigContext>().unwrap();
 
-    // TODO(users): Sync LocalStorage with the DB
-    let config = use_state(|| match LocalStorage::get(LOCAL_STORAGE_KEY) {
-        Ok(config) => Ok(config),
-        Err(err @ StorageError::KeyNotFound(_)) => {
-            tracing::info!({ ?err }, "No Trellis config found. Using starter config");
-            Ok(Config::starter())
-        }
-        Err(err) => {
-            let value = LocalStorage::raw().get_item(LOCAL_STORAGE_KEY);
-            tracing::error!({ ?err, ?value }, "Could not parse Trellis config");
-            Err(err)
-        }
-    });
-
-    let inner = match &*config {
+    let inner = match &config_ctx.inner {
         Ok(config) => html! { <Board config={config.clone()} class="flex-grow" /> },
         Err(err) => html! {
-            <div class="alert">
+            <Error error={err.clone()}>
                 <p>{"Could not load Trellis config. The error details should be in the console log."}</p>
-                <pre>{err.to_string()}</pre>
-            </div>
+            </Error>
         },
     };
 

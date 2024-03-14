@@ -1,5 +1,3 @@
-use gloo::storage::errors::StorageError;
-use gloo::storage::{LocalStorage, Storage};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -8,48 +6,35 @@ use crate::components::*;
 use crate::hooks::*;
 use crate::Route;
 
-const LOCAL_STORAGE_KEY: &str = "trellis.config";
-
 #[function_component]
 pub fn TrellisConfig() -> Html {
     use_title("Trellis");
     let navigator = use_navigator().unwrap();
+    let config_ctx = use_context::<TrellisConfigContext>().unwrap();
 
-    // TODO(users): Sync LocalStorage with the DB
-    let config = use_state(|| match LocalStorage::get(LOCAL_STORAGE_KEY) {
-        Ok(config) => Ok(config),
-        Err(err @ StorageError::KeyNotFound(_)) => {
-            tracing::info!({ ?err }, "No Trellis config found. Using starter config");
-            Ok(Config::starter())
-        }
-        Err(err) => {
-            let value = LocalStorage::raw().get_item(LOCAL_STORAGE_KEY);
-            tracing::error!({ ?err, ?value }, "Could not parse Trellis config");
-            Err(err)
-        }
-    });
-
-    let inner = match &*config {
+    let inner = match &config_ctx.inner {
         Ok(config) => {
             let onsubmit = {
+                let config_ctx = config_ctx.clone();
                 Callback::from(move |config: Option<Config>| {
                     tracing::debug!({ ?config }, "Editor result");
 
                     if let Some(config) = config {
-                        LocalStorage::set(LOCAL_STORAGE_KEY, config).unwrap();
+                        config_ctx.dispatch(TrellisConfigAction::Save(config))
                     };
 
                     navigator.push(&Route::Trellis);
                 })
             };
 
-            html! { <BoardEditor config={config.clone()} class="flex-grow" {onsubmit} /> }
+            html! {
+                <BoardEditor config={config.clone()} class="flex-grow" {onsubmit} />
+            }
         }
         Err(err) => html! {
-            <div class="alert">
+            <Error error={err.clone()}>
                 <p>{"Could not load Trellis config. The error details should be in the console log."}</p>
-                <pre>{err.to_string()}</pre>
-            </div>
+            </Error>
         },
     };
 

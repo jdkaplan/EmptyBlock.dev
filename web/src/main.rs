@@ -51,8 +51,16 @@ impl Route {
         match self {
             Route::Home => html! { <pages::Home /> },
             Route::Tiles => html! { <pages::Tiles /> },
-            Route::Trellis => html! { <pages::Trellis /> },
-            Route::TrellisConfig => html! { <pages::TrellisConfig /> },
+            Route::Trellis => html! {
+                <components::TrellisConfigProvider>
+                    <pages::Trellis />
+                </components::TrellisConfigProvider>
+            },
+            Route::TrellisConfig => html! {
+                <components::TrellisConfigProvider>
+                    <pages::TrellisConfig />
+                </components::TrellisConfigProvider>
+            },
         }
     }
 }
