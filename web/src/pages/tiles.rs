@@ -44,14 +44,7 @@ pub fn Tiles() -> Html {
         }
     });
 
-    use_body_class(vec![
-        "flex",
-        "flex-row",
-        "h-screen",
-        "w-screen",
-        "items-center",
-        "justify-center",
-    ]);
+    use_body_class(vec!["h-screen", "w-screen"]);
 
     tracing::debug!({ ?seed }, "Tiles");
     tracing::debug!("\n{}", *update);
@@ -77,7 +70,11 @@ pub fn Tiles() -> Html {
 
     let inner = match *view_state {
         ViewState::Run => html! {
-            <Simulation update={update.binary.clone()} seed={*seed} />
+            <div class="flex justify-center items-center h-full container-size">
+                <div class="box-square">
+                    <Simulation update={update.binary.clone()} seed={*seed} class="h-full w-full"/>
+                </div>
+            </div>
         },
         ViewState::Edit => html! {
             <SimulationEditor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="p-1" />
@@ -93,18 +90,8 @@ pub fn Tiles() -> Html {
         ViewState::Edit => html! {},
     };
 
-    // I haven't been able to get this layout to be exactly what I want. Ideally, this is a
-    // full-screen app (never scrolls, fills as much space as possible) _and_ all the simulation's
-    // grid cells are square.
-    //
-    // So far the best I can get is that the whole app is square and fills the screen, which makes
-    // the grid cells a little wider than they are tall. I don't want to _remove_ the header and
-    // footer, so I'm giving up for now.
-    //
-    // TODO: There must be some way to satisfy both "full screen app" and "square grid cells"....
-
     html! {
-        <div class="flex flex-col items-stretch justify-between h-full w-full">
+        <div class="flex flex-col justify-between h-full w-full">
             <nav class="flex flex-row justify-between">
                 <a href={crate::Route::Home.to_path()}>{"EmptyBlock.dev"}</a>
                 { right_nav }

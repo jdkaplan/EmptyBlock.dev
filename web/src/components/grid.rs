@@ -25,7 +25,7 @@ pub fn Grid(props: &GridProps) -> Html {
             let foreground = props.next[(r, c)];
 
             children.push(html! {
-                <Block key={key} background={background} foreground={foreground} class="aspect-square min-h-1 min-w-1" />
+                <Block {key} {background} {foreground} />
             });
         }
     }
