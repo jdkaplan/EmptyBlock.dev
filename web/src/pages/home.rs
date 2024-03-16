@@ -2,6 +2,7 @@ use gloo::net::http::Request;
 use yew::prelude::*;
 use yew::suspense::use_future;
 
+use crate::components::*;
 use crate::Route;
 
 type Link = yew_router::components::Link<Route>;
@@ -10,32 +11,27 @@ type Link = yew_router::components::Link<Route>;
 pub fn Home() -> Html {
     let fallback_greeting = html! { <p>{"Loading greeting..."}</p> };
 
-    html! {
-        <main>
+    html! { <>
+        <Header />
+
+        <main class="m-3 max-w-prose">
             <h1>{"EmptyBlock.dev"}</h1>
+
+            <p>{"A playground for web app experiments"}</p>
 
             <Suspense fallback={fallback_greeting}>
                 <Greeting />
             </Suspense>
 
-            <ul>
-                <li><Link to={Route::Home}>{"Home"}</Link></li>
+            <ul class="list-bulleted">
                 <li><Link to={Route::Tiles}>{"Tiles"}</Link></li>
                 <li><Link to={Route::Trellis}>{"Trellis"}</Link></li>
-                <li><a href="/about">{"About"}</a></li>
+                <li>{"(your experiment?)"}</li>
             </ul>
         </main>
-    }
-}
 
-async fn fetch_greeting() -> eyre::Result<String> {
-    let res = Request::get("/api/hello").send().await?;
-    if !res.ok() {
-        return Err(eyre::eyre!("error response: {:?}", res));
-    }
-
-    let text = res.text().await?;
-    Ok(text)
+        <Footer />
+    </> }
 }
 
 #[function_component]
@@ -53,4 +49,14 @@ fn Greeting() -> HtmlResult {
             </div>
         }),
     }
+}
+
+async fn fetch_greeting() -> eyre::Result<String> {
+    let res = Request::get("/api/hello").send().await?;
+    if !res.ok() {
+        return Err(eyre::eyre!("error response: {:?}", res));
+    }
+
+    let text = res.text().await?;
+    Ok(text)
 }

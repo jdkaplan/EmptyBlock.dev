@@ -81,27 +81,17 @@ pub fn Tiles() -> Html {
         },
     };
 
-    let right_nav = match *view_state {
-        ViewState::Run => html! {
-            <div>
-                <button onclick={show_editor}>{"Edit"}</button>
-            </div>
-        },
-        ViewState::Edit => html! {},
-    };
-
     html! {
         <div class="flex flex-col justify-between h-full w-full">
-            <nav class="flex flex-row justify-between">
-                <a href={crate::Route::Home.to_path()}>{"EmptyBlock.dev"}</a>
-                { right_nav }
-            </nav>
+            <Header>
+                if *view_state != ViewState::Run {
+                    <button onclick={show_editor}>{"Edit"}</button>
+                }
+            </Header>
 
             {inner}
 
-            <footer class="flex flex-row justify-between">
-                <p class="text-small">{"someone please help me style this 😅"}</p>
-            </footer>
+            <Footer />
         </div>
     }
 }
