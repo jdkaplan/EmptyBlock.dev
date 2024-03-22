@@ -24,7 +24,7 @@ pub fn Home() -> Html {
             </Suspense>
 
             <ul class="list-bulleted">
-                <li><Link to={Route::Tiles}>{"Tiles"}</Link></li>
+                <li><Link to={Route::Mosaic}>{"Mosaic"}</Link></li>
                 <li><Link to={Route::Trellis}>{"Trellis"}</Link></li>
                 <li>{"(your experiment?)"}</li>
             </ul>

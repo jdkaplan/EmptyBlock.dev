@@ -1,7 +1,7 @@
 use gloo::timers::callback::Interval;
 use yew::prelude::*;
 
-use crate::apps::tiles::{Blocks, Interpreter, Neighborhood, Rgba, GRID_SIZE};
+use crate::apps::mosaic::{Blocks, Interpreter, Neighborhood, Rgba, GRID_SIZE};
 use crate::components::*;
 
 #[derive(Properties, PartialEq, Debug)]

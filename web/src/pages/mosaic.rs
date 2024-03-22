@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::apps::tiles::Module;
+use crate::apps::mosaic::Module;
 use crate::components::*;
 use crate::hooks::*;
 use crate::Route;
@@ -21,8 +21,8 @@ enum ViewState {
 }
 
 #[function_component]
-pub fn Tiles() -> Html {
-    use_title("Tiles");
+pub fn Mosaic() -> Html {
+    use_title("Mosaic");
 
     let location = use_location().unwrap();
     let history = BrowserHistory::new();
@@ -46,7 +46,7 @@ pub fn Tiles() -> Html {
 
     use_body_class(vec!["h-screen", "w-screen"]);
 
-    tracing::debug!({ ?seed }, "Tiles");
+    tracing::debug!({ ?seed }, "Mosaic");
     tracing::debug!("\n{}", *update);
 
     let show_editor = {
@@ -99,7 +99,7 @@ pub fn Tiles() -> Html {
 fn replace_url(history: &BrowserHistory, module: &Module, seed: u64) -> eyre::Result<()> {
     history
         .replace_with_query(
-            format!("{}#{}", Route::Tiles.to_path(), module.encode()),
+            format!("{}#{}", Route::Mosaic.to_path(), module.encode()),
             Query { seed: Some(seed) },
         )
         .wrap_err("replace history")
@@ -108,7 +108,7 @@ fn replace_url(history: &BrowserHistory, module: &Module, seed: u64) -> eyre::Re
 fn push_url(history: &BrowserHistory, module: &Module, seed: u64) -> eyre::Result<()> {
     history
         .push_with_query(
-            format!("{}#{}", Route::Tiles.to_path(), module.encode()),
+            format!("{}#{}", Route::Mosaic.to_path(), module.encode()),
             Query { seed: Some(seed) },
         )
         .wrap_err("replace history")

@@ -37,8 +37,8 @@ enum Route {
     #[not_found]
     #[at("/")]
     Home,
-    #[at("/tiles")]
-    Tiles,
+    #[at("/mosaic")]
+    Mosaic,
     #[at("/trellis")]
     Trellis,
     #[at("/trellis/config")]
@@ -50,7 +50,7 @@ impl Route {
     fn render(self) -> Html {
         match self {
             Route::Home => html! { <pages::Home /> },
-            Route::Tiles => html! { <pages::Tiles /> },
+            Route::Mosaic => html! { <pages::Mosaic /> },
             Route::Trellis => html! {
                 <components::TrellisConfigProvider>
                     <pages::Trellis />

@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::apps::tiles::Rgba;
+use crate::apps::mosaic::Rgba;
 
 #[derive(Properties, PartialEq, Debug)]
 pub struct BlockProps {

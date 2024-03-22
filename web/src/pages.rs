@@ -6,6 +6,6 @@ macro_rules! page {
 }
 
 page!(home);
-page!(tiles);
+page!(mosaic);
 page!(trellis);
 page!(trellis_config);

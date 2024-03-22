@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::apps::tiles::{Blocks, GRID_SIZE};
+use crate::apps::mosaic::{Blocks, GRID_SIZE};
 
 use crate::components::*;
 

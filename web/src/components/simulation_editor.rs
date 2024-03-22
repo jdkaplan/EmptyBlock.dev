@@ -1,7 +1,7 @@
 use web_sys::{HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
 
-use crate::apps::tiles::Module;
+use crate::apps::mosaic::Module;
 
 #[derive(Properties, PartialEq, Debug)]
 pub struct SimulationEditorProps {
