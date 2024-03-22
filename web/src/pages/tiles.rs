@@ -84,7 +84,7 @@ pub fn Tiles() -> Html {
     html! {
         <div class="flex flex-col justify-between h-full w-full">
             <Header>
-                if *view_state != ViewState::Run {
+                if *view_state == ViewState::Run {
                     <button onclick={show_editor}>{"Edit"}</button>
                 }
             </Header>
