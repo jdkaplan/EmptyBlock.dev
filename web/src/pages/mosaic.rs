@@ -77,7 +77,7 @@ pub fn Mosaic() -> Html {
             </div>
         },
         ViewState::Edit => html! {
-            <SimulationEditor source={update.text.clone()} seed={*seed} onsubmit={onsubmit} class="p-1" />
+            <SimulationEditor source={update.text.clone()} seed={*seed} {onsubmit} class="px-3 py-1" />
         },
     };
 
@@ -87,6 +87,7 @@ pub fn Mosaic() -> Html {
                 if *view_state == ViewState::Run {
                     <button onclick={show_editor}>{"Edit"}</button>
                 }
+                <span>{"TODO(login)"}</span>
             </Header>
 
             {inner}

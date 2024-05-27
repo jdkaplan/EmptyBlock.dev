@@ -1,7 +1,10 @@
+use eyre::OptionExt;
+use gloo::timers::callback::Timeout;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement};
 use yew::prelude::*;
 
-use crate::apps::mosaic::Module;
+use crate::apps::mosaic::{Blocks, Module};
+use crate::components::*;
 
 #[derive(Properties, PartialEq, Debug)]
 pub struct SimulationEditorProps {
@@ -24,11 +27,16 @@ pub struct SimulationEditor {
     seed_ref: NodeRef,
     source_ref: NodeRef,
 
+    preview: Blocks,
+    pending_update: Option<Timeout>,
+
     error: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum SimulationEditorMsg {
+    EditSeed,
+    UpdatePreview,
     Save,
     Cancel,
 }
@@ -38,10 +46,16 @@ impl Component for SimulationEditor {
 
     type Properties = SimulationEditorProps;
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        let link = ctx.link().clone();
+
         Self {
             seed_ref: NodeRef::default(),
             source_ref: NodeRef::default(),
+            preview: Blocks::default(),
+            pending_update: Some(Timeout::new(0, move || {
+                link.send_message(SimulationEditorMsg::UpdatePreview)
+            })),
             error: None,
         }
     }
@@ -49,32 +63,53 @@ impl Component for SimulationEditor {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
 
+        let oninput = ctx.link().callback(|_| SimulationEditorMsg::EditSeed);
         let onsubmit = ctx.link().callback(|_| SimulationEditorMsg::Save);
         let oncancel = ctx.link().callback(|_| SimulationEditorMsg::Cancel);
 
         // TODO: Explain the module requirements
+        let class = classes!(
+            "grid",
+            "grid-cols-1",
+            "lg:grid-cols-2",
+            "gap-2",
+            "lg:grid-rows-2",
+            props.class.clone()
+        );
 
         html! {
-            <div class={classes!("flex", "flex-col", props.class.clone())}>
-                <div class="max-w-prose">{docs()}</div>
+            <form action="javascript:void(0);" {class}>
+                <div class="max-w-prose h-full flex-col align-start">
+                    {docs()}
 
-                <form action="javascript:void(0);" class="flex flex-col">
                     if let Some(err) = &self.error {
                         <div class="alert"><pre>{err.to_string()}</pre></div>
                     }
-
-                    <label for="seed">{"Seed"}</label>
-                    <input name="seed" ref={self.seed_ref.clone()} type="text" />
-
-                    <label for="source">{"Module"}</label>
-                    <textarea name="source" ref={self.source_ref.clone()} />
 
                     <div class="flex flex-row justify-around">
                         <button type="button" onclick={oncancel}>{"Cancel"}</button>
                         <button type="button" onclick={onsubmit}>{"Submit"}</button>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="flex flex-col h-full lg:row-start-2 space-y-2">
+                    <p>{"Initial state"}</p>
+                    <div class="space-x-4">
+                        <label for="seed">{"Seed"}</label>
+                        <input name="seed" ref={self.seed_ref.clone()} type="text" {oninput} />
+                    </div>
+                    <div class="flex flex-grow justify-start items-start h-full min-h-0">
+                        <div class="box-square">
+                            <Grid prev={Blocks::default()} next={self.preview} class="h-full w-full" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col lg:row-start-1 lg:col-start-2 lg:row-span-2">
+                    <label for="source">{"Module"}</label>
+                    <textarea name="source" ref={self.source_ref.clone()} />
+                </div>
+            </form>
         }
     }
 
@@ -96,16 +131,28 @@ impl Component for SimulationEditor {
         let props = ctx.props();
 
         match msg {
-            SimulationEditorMsg::Save => {
-                let seed = self.seed_ref.cast::<HtmlInputElement>().unwrap();
-                let source = self.source_ref.cast::<HtmlTextAreaElement>().unwrap();
+            SimulationEditorMsg::EditSeed => {
+                let link = ctx.link().clone();
+                self.pending_update = Some(Timeout::new(500, move || {
+                    link.send_message(SimulationEditorMsg::UpdatePreview)
+                }));
 
-                match Module::new(source.value()) {
+                false
+            }
+
+            SimulationEditorMsg::UpdatePreview => {
+                self.pending_update = None;
+                self.preview = Blocks::from_seed(self.current_seed().unwrap_or_default());
+                true
+            }
+
+            SimulationEditorMsg::Save => {
+                let seed = self.current_seed().unwrap_or_default();
+
+                match self.current_module() {
                     Ok(module) => {
-                        props.onsubmit.emit(Some(SimulationEditorValue {
-                            seed: seed.value().parse().unwrap_or_default(),
-                            module,
-                        }));
+                        let value = SimulationEditorValue { seed, module };
+                        props.onsubmit.emit(Some(value));
                         false
                     }
                     Err(err) => {
@@ -119,6 +166,20 @@ impl Component for SimulationEditor {
                 false
             }
         }
+    }
+}
+
+impl SimulationEditor {
+    fn current_seed(&self) -> eyre::Result<u64> {
+        let seed = self.seed_ref.cast::<HtmlInputElement>();
+        let seed = seed.ok_or_eyre("no input element")?;
+        Ok(seed.value().parse()?)
+    }
+
+    fn current_module(&self) -> eyre::Result<Module> {
+        let source = self.source_ref.cast::<HtmlTextAreaElement>();
+        let source = source.ok_or_eyre("no textarea element")?;
+        Ok(Module::new(source.value())?)
     }
 }
 
