@@ -43,6 +43,22 @@ description = "*DESTROY* local development services (this deletes data!)"
 command = "docker"
 args = ["compose", "down"]
 
+[tasks.db]
+alias = "db-sync"
+
+[tasks.db-sync]
+description = "db-migrate + orm"
+run_task = { name = ["db-migrate", "orm"], parallel = false, fork = true }
+
+[tasks.orm]
+description = "Generate ORM definitions"
+command = "cargo"
+args = [
+    "bin", "sea-orm-cli", "generate", "entity",
+    "--ignore-tables", "schema_migrations",
+    "--output-dir", "server/src/orm",
+]
+
 [tasks.db-migrate]
 description = "Run local database migrations"
 command = "cargo"
