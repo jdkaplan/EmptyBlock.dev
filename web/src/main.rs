@@ -32,23 +32,30 @@ fn main() {
     yew::Renderer::<App>::new().render();
 }
 
+// TODO: Make dedicated edit routes for forms
 #[derive(Clone, PartialEq, Routable)]
 enum Route {
     #[not_found]
+    #[at("/404")]
+    NotFound,
+
     #[at("/")]
     Home,
+
     #[at("/mosaic")]
     Mosaic,
+
     #[at("/trellis")]
     Trellis,
+
     #[at("/trellis/config")]
     TrellisConfig,
-    // TODO: Make dedicated edit routes
 }
 
 impl Route {
     fn render(self) -> Html {
         match self {
+            Route::NotFound => html! { <pages::NotFound /> },
             Route::Home => html! { <pages::Home /> },
             Route::Mosaic => html! { <pages::Mosaic /> },
             Route::Trellis => html! {

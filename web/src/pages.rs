@@ -7,5 +7,6 @@ macro_rules! page {
 
 page!(home);
 page!(mosaic);
+page!(not_found);
 page!(trellis);
 page!(trellis_config);
