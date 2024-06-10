@@ -181,6 +181,7 @@ fn init_tracing() -> eyre::Result<()> {
     let subscriber = tracing_subscriber::fmt()
         .compact()
         .with_max_level(TRACING_LEVEL)
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
     Ok(())
