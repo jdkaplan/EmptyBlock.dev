@@ -14,6 +14,7 @@ use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
 
 mod orm;
+mod recurse;
 
 const COMMIT_HASH: &str = include_str!(concat!(env!("OUT_DIR"), "/commit_hash"));
 const SOURCE_URL: &str = include_str!(concat!(env!("OUT_DIR"), "/source_url"));

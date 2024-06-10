@@ -11,9 +11,13 @@ axum = { version = "0.7.4", features = ["macros"] }
 color-eyre = "0.6.2"
 eyre = "0.6.12"
 markup = "0.15.0"
+oauth2 = "4.4.2"
+reqwest = { version = "0.12.4", default-features = false, features = ["rustls-tls", "json"] }
 sea-orm = { version = "0.12.14", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
+serde = { version = "1.0.203", features = ["derive"] }
 thiserror = "1.0.57"
 tokio = { version = "1.36.0", features = ["full"] }
 tower-http = { version = "0.5.1", features = ["fs", "trace"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+url = "2.5.0"
