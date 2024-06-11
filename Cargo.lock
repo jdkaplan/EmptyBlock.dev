@@ -2503,7 +2503,6 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
- "url",
 ]
 
 [[package]]
@@ -3522,7 +3521,6 @@ dependencies = [
  "tracing-web",
  "url",
  "uuid",
- "wasm-bindgen-futures",
  "wasm-bindgen-test",
  "wasmi",
  "wat",
