@@ -33,6 +33,20 @@ command = "cargo"
 args = ["run", "--package", "server", "--", "./web/dist"]
 watch = { watch = ["server"] }
 
+[tasks.deps]
+description = "Install dev tools and Cargo aliases"
+run_task = { name = ["deps-install", "deps-sync"] }
+
+[tasks.deps-install]
+description = "Install dev tools"
+command = "cargo"
+args = ["bin", "--install"]
+
+[tasks.deps-sync]
+description = "Sync Cargo aliases from dev tools"
+command = "cargo"
+args = ["bin", "--sync-aliases"]
+
 [tasks.services]
 alias = "services-up"
 
