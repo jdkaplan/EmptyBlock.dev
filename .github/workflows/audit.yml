@@ -1,0 +1,43 @@
+name: Audit
+
+on:
+  pull_request:
+    paths:
+      - '**/Cargo.lock'
+      - '**/Cargo.toml'
+
+jobs:
+  cargo-deny-checks:
+    name: Dependency Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: EmbarkStudios/cargo-deny-action@v1
+        with:
+          command: check bans licenses sources
+
+  cargo-deny-advisories:
+    name: Advisories
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: EmbarkStudios/cargo-deny-action@v1
+        with:
+          command: check advisories
+
+  cargo-machete:
+    name: Unused Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - run: cargo binstall --no-confirm cargo-run-bin
+
+      - run: cargo machete
