@@ -2,12 +2,16 @@ use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt::format::Pretty;
 use tracing_subscriber::prelude::*;
 use yew::prelude::*;
+use yew::suspense::use_future;
 use yew_router::prelude::*;
 
 mod apps;
 mod components;
 mod hooks;
 mod pages;
+mod types;
+
+use crate::types::Session;
 
 #[cfg(debug_assertions)]
 const TRACING_LEVEL: tracing::Level = tracing::Level::DEBUG;
@@ -72,11 +76,34 @@ impl Route {
     }
 }
 
-#[function_component(App)]
-fn app() -> Html {
+#[function_component]
+fn App() -> Html {
+    let loading = html! { <p>{"Loading app..."}</p> };
+
     html! {
-        <BrowserRouter>
-            <Switch<Route> render={Route::render} />
-        </BrowserRouter>
+        <Suspense fallback={loading}>
+            <WaitForSession>
+                <BrowserRouter>
+                    <Switch<Route> render={Route::render} />
+                </BrowserRouter>
+            </WaitForSession>
+        </Suspense>
     }
+}
+
+#[derive(Properties, PartialEq, Clone)]
+pub struct Props {
+    #[prop_or_default]
+    pub children: Html,
+}
+
+#[function_component]
+fn WaitForSession(props: &Props) -> HtmlResult {
+    let session = use_future(Session::load_ok)?;
+
+    Ok(html! {
+        <ContextProvider<Option<Session>> context={(*session).clone()}>
+            { props.children.clone () }
+        </ContextProvider<Option<Session>>>
+    })
 }

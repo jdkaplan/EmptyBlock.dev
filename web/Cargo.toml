@@ -11,6 +11,7 @@ base64 = "0.21.7"
 eyre = "0.6.12"
 getrandom = { version = "0.2.12", features = ["js"] }
 gloo = "0.11.0"
+http = "1.1.0"
 once_cell = "1.19.0"
 rand = "0.8.5"
 serde = { version = "1.0.197", features = ["derive"] }
@@ -22,6 +23,7 @@ tracing-subscriber = { version = "0.3.18", features = ["time"] }
 tracing-web = "0.1.3"
 url = "2.5.0"
 uuid = { version = "1.7.0", features = ["v4", "serde"] }
+wasm-bindgen-futures = "0.4.42"
 wasmi = "0.31.2"
 wat = "1.201.0"
 web-sys = { version = "0.3.68", features = ["HtmlInputElement", "HtmlTextAreaElement", "DomTokenList", "Element"] }

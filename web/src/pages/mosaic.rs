@@ -87,7 +87,6 @@ pub fn Mosaic() -> Html {
                 if *view_state == ViewState::Run {
                     <button onclick={show_editor}>{"Edit"}</button>
                 }
-                <span>{"TODO(login)"}</span>
             </Header>
 
             {inner}

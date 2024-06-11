@@ -24,7 +24,6 @@ pub fn Trellis() -> Html {
         <div class="min-h-screen flex flex-col text-black bg-white dark:text-white dark:bg-black">
             <Header>
                 <Link to={Route::TrellisConfig}>{"Board Settings"}</Link>
-                <span>{"TODO(login)"}</span>
             </Header>
 
             <main class="flex-grow flex flex-col justify-between m-1">

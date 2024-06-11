@@ -6,7 +6,7 @@ use axum::extract::{FromRef, Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Redirect};
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
 use axum_extra::extract::cookie::{Cookie, Key};
 use axum_extra::extract::PrivateCookieJar;
 use axum_extra::headers::{Header, Referer};
@@ -16,7 +16,7 @@ use eyre::{Context, OptionExt};
 use http::HeaderValue;
 use oauth2::{AuthorizationCode, ClientId, ClientSecret, RedirectUrl};
 use sea_orm::{Database, DatabaseConnection};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
@@ -24,9 +24,10 @@ use tower_sessions::cookie::SameSite;
 use tower_sessions::{Session, SessionManagerLayer};
 use tower_sessions_sqlx_store::sqlx::PgPool;
 use tower_sessions_sqlx_store::PostgresStore;
+use uuid::Uuid;
 
-use crate::auth::{AuthService, AuthenticateParams};
-use crate::recurse::RecurseClient;
+use crate::auth::{AuthService, AuthenticateParams, CsrfToken, User};
+use crate::recurse::{Profile, RecurseClient};
 
 const OAUTH_RETURN_KEY: &str = "oauth_return";
 
@@ -164,6 +165,7 @@ async fn main() -> eyre::Result<()> {
         )
         .route("/oauth/start", get(oauth_start))
         .route("/oauth/callback", get(oauth_callback))
+        .route("/session", get(session_get).delete(session_delete))
         .route("/about", get(about))
         .layer(session_layer)
         .fallback_service(statics)
@@ -319,6 +321,48 @@ async fn oauth_callback(
             tracing::warn!({ ?session }, "no referer to go to?");
             Ok(Redirect::to("/"))
         }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct SessionData {
+    pub user_id: Uuid,
+    pub profile: Profile,
+
+    pub csrf_token: CsrfToken,
+}
+
+async fn session_get(session: Session, user: User) -> Result<Json<SessionData>, StatusCode> {
+    let Ok(Some(csrf_token)) = CsrfToken::load_from(&session).await else {
+        tracing::error!("User session without CSRF token should be impossible");
+        return Err(StatusCode::UNAUTHORIZED);
+    };
+
+    Ok(Json(SessionData {
+        user_id: user.id,
+        profile: user.profile,
+        csrf_token,
+    }))
+}
+
+async fn session_delete(
+    Back { return_path }: Back,
+    session: Session,
+    TypedHeader(csrf_header): TypedHeader<CsrfToken>,
+) -> AppResult<impl IntoResponse> {
+    let Ok(Some(csrf_session)) = CsrfToken::load_from(&session).await else {
+        return Ok(StatusCode::UNAUTHORIZED.into_response());
+    };
+
+    if csrf_header != csrf_session {
+        return Ok(StatusCode::UNAUTHORIZED.into_response());
+    }
+
+    session.flush().await?;
+
+    match return_path {
+        Some(path) => Ok(Redirect::to(&path).into_response()),
+        None => Ok(Redirect::to("/").into_response()),
     }
 }
 

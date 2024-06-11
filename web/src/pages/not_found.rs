@@ -8,9 +8,7 @@ type Link = yew_router::components::Link<Route>;
 #[function_component]
 pub fn NotFound() -> Html {
     html! { <>
-        <Header>
-            <span>{"TODO(login)"}</span>
-        </Header>
+        <Header />
 
         <main class="m-3 max-w-prose">
             <h1>{"Not Found"}</h1>
