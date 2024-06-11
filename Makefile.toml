@@ -2,6 +2,14 @@
 default_to_workspace = false
 skip_core_tasks = true
 
+[tasks.default]
+alias = "help"
+
+[tasks.help]
+description = "Show descriptions for all tasks"
+command = "cargo"
+args = ["make", "--list-all-steps", "--loglevel=off"]
+
 [tasks.dev]
 description = "Start development services, run the app, watch for changes"
 dependencies = ["services"]
