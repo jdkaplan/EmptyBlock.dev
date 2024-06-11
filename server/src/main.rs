@@ -60,6 +60,7 @@ fn must_env(name: &str) -> eyre::Result<String> {
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     init_tracing()?;
 
     // TODO: Use config-rs or figment when this gets more complicated.
