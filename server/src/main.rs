@@ -2,18 +2,40 @@ use std::env;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use axum::extract::{FromRef, State};
+use axum::extract::{FromRef, Query, State};
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Redirect};
 use axum::routing::get;
-use axum::Router;
+use axum::{Json, Router};
+use axum_extra::extract::cookie::{Cookie, Key};
+use axum_extra::extract::PrivateCookieJar;
+use axum_extra::headers::{Header, Referer};
+use axum_extra::TypedHeader;
+use base64::prelude::*;
 use eyre::{Context, OptionExt};
+use http::HeaderValue;
+use oauth2::{AuthorizationCode, ClientId, ClientSecret, RedirectUrl};
 use sea_orm::{Database, DatabaseConnection};
+use serde::{Deserialize, Serialize};
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::TraceLayer;
+use tower_sessions::cookie::SameSite;
+use tower_sessions::{Session, SessionManagerLayer};
+use tower_sessions_sqlx_store::sqlx::PgPool;
+use tower_sessions_sqlx_store::PostgresStore;
+use uuid::Uuid;
 
+use crate::auth::{AuthService, AuthenticateParams, CsrfToken, User};
+use crate::recurse::{Profile, RecurseClient};
+
+const OAUTH_RETURN_KEY: &str = "oauth_return";
+
+const OAUTH_STATE_COOKIE: &str = "ebd_oauth_state";
+
+mod auth;
 mod orm;
+mod recurse;
 
 const COMMIT_HASH: &str = include_str!(concat!(env!("OUT_DIR"), "/commit_hash"));
 const SOURCE_URL: &str = include_str!(concat!(env!("OUT_DIR"), "/source_url"));
@@ -29,6 +51,9 @@ const TRACING_LEVEL: tracing::Level = tracing::Level::INFO;
 struct AppState {
     globals: Arc<Globals>,
     db: DatabaseConnection,
+    auth_svc: AuthService,
+    cookie_key: Key,
+    http_client: reqwest::Client,
 }
 
 struct Globals {
@@ -41,11 +66,19 @@ type AppResult<T> = Result<T, AppError>;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
-struct AppError(#[from] eyre::Error);
+enum AppError {
+    #[error(transparent)]
+    Session(#[from] tower_sessions::session::Error),
+
+    #[error(transparent)]
+    Other(#[from] eyre::Error),
+}
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
-        tracing::error!("{:?}", self.0);
+        tracing::error!("{:?}", self);
+        tracing::debug!("{:#}", self);
+
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "An internal server error prevented this request from being handled.",
@@ -65,7 +98,19 @@ async fn main() -> eyre::Result<()> {
 
     // TODO: Use config-rs or figment when this gets more complicated.
     let db_url = must_env("DATABASE_URL")?;
-    let db: DatabaseConnection = Database::connect(db_url).await?;
+
+    let db_pool = PgPool::connect(&db_url).await?;
+    let db_conn: DatabaseConnection = Database::connect(db_url).await?;
+
+    let rc_api_client_id = must_env("RC_API_CLIENT_ID")?;
+    let rc_api_client_secret = must_env("RC_API_CLIENT_SECRET")?;
+    let rc_api_redirect_uri = must_env("RC_API_REDIRECT_URI")?;
+
+    let cookie_key = {
+        let encoded = must_env("COOKIE_KEY")?;
+        let bytes = BASE64_STANDARD.decode(encoded)?;
+        Key::from(&bytes)
+    };
 
     let globals = Arc::new(Globals {
         source_url: String::from(SOURCE_URL),
@@ -83,6 +128,34 @@ async fn main() -> eyre::Result<()> {
 
     let statics = ServeDir::new(static_dir).fallback(ServeFile::new(spa));
 
+    let session_store = PostgresStore::new(db_pool)
+        .with_schema_name("tower_sessions")
+        .expect("static schema name")
+        .with_table_name("sessions")
+        .expect("static table name");
+
+    // Session cookie properties:
+    // - The default name is "id", so choose something more descriptive.
+    // - SameSite=Lax allows the login flow (OAuth redirect out -> redirect in) to come back with
+    //   the same session ID.
+    // - Use the same key to sign the cookies.
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_name("ebd_session_id")
+        .with_same_site(SameSite::Lax)
+        .with_signed(cookie_key.clone());
+
+    let http_client = reqwest::Client::new();
+
+    let auth_svc = AuthService {
+        db: db_conn.clone(),
+        recurse: RecurseClient::new(
+            http_client.clone(),
+            ClientId::new(rc_api_client_id),
+            ClientSecret::new(rc_api_client_secret),
+            RedirectUrl::new(rc_api_redirect_uri)?,
+        ),
+    };
+
     let app = Router::new()
         .nest(
             "/api",
@@ -90,10 +163,20 @@ async fn main() -> eyre::Result<()> {
                 .route("/hello", get(hello))
                 .fallback(not_found),
         )
+        .route("/oauth/start", get(oauth_start))
+        .route("/oauth/callback", get(oauth_callback))
+        .route("/session", get(session_get).delete(session_delete))
         .route("/about", get(about))
+        .layer(session_layer)
         .fallback_service(statics)
         .layer(TraceLayer::new_for_http())
-        .with_state(AppState { db, globals });
+        .with_state(AppState {
+            db: db_conn,
+            globals,
+            auth_svc,
+            cookie_key,
+            http_client,
+        });
 
     let addr = "0.0.0.0:8080";
     tracing::info!("Listening on http://{}", addr);
@@ -111,7 +194,10 @@ async fn not_found() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Not Found")
 }
 
-async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoResponse> {
+async fn hello(
+    State(db): State<DatabaseConnection>,
+    user: Option<User>,
+) -> AppResult<impl IntoResponse> {
     use orm::prelude::*;
     use sea_orm::prelude::*;
     use sea_orm::query::{QueryOrder, QuerySelect};
@@ -123,14 +209,18 @@ async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoRespo
         .await
         .wrap_err("random greeting")?;
 
-    println!("{:?}", greeting);
-
     let Some(greeting) = greeting else {
         tracing::error!("no greetings registered");
         return Ok(String::from("Hi!"));
     };
 
-    Ok(greeting.greeting)
+    let message = if let (Some(template), Some(user)) = (greeting.template, user) {
+        template.replace("{}", &user.profile.name)
+    } else {
+        greeting.greeting
+    };
+
+    Ok(message)
 }
 
 async fn about(State(globals): State<Arc<Globals>>) -> impl IntoResponse {
@@ -176,6 +266,154 @@ async fn about(State(globals): State<Arc<Globals>>) -> impl IntoResponse {
     };
 
     axum::response::Html(page.to_string())
+}
+
+async fn oauth_start(
+    State(auth): State<AuthService>,
+    Back { return_path }: Back,
+    session: Session,
+    cookies: PrivateCookieJar,
+) -> impl IntoResponse {
+    let (auth_url, oauth_state) = auth.recurse_authorize_url();
+
+    // Keep track of where we should return to afterward.
+    if let Some(path) = return_path {
+        tracing::warn!({ ?path, ?session }, "return path");
+        if let Err(err) = session.insert(OAUTH_RETURN_KEY, path).await {
+            tracing::error!({ ?err }, "could not set OAuth return path");
+        }
+    }
+
+    // Set the OAuth state token (to prevent CSRF) to prove that we started this flow.
+    (
+        cookies.add(Cookie::new(
+            OAUTH_STATE_COOKIE,
+            oauth_state.secret().to_owned(),
+        )),
+        Redirect::to(auth_url.as_str()),
+    )
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct OauthCallback {
+    code: String,
+    state: String,
+}
+
+async fn oauth_callback(
+    State(auth): State<AuthService>,
+    session: Session,
+    cookies: PrivateCookieJar,
+    Query(query): Query<OauthCallback>,
+) -> AppResult<impl IntoResponse> {
+    let user = auth
+        .authenticate(AuthenticateParams {
+            code: AuthorizationCode::new(query.code),
+            cookie_state: cookies
+                .get(OAUTH_STATE_COOKIE)
+                .map(|c| oauth2::CsrfToken::new(c.value().to_owned())),
+            query_state: oauth2::CsrfToken::new(query.state),
+        })
+        .await
+        .wrap_err("authenticate")?;
+
+    user.start_session(&session).await?;
+
+    match session.get::<String>(OAUTH_RETURN_KEY).await? {
+        Some(return_path) => {
+            tracing::warn!({ ?return_path, ?session }, "going back to");
+            Ok(Redirect::to(&return_path))
+        }
+        None => {
+            tracing::warn!({ ?session }, "no referer to go to?");
+            Ok(Redirect::to("/"))
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct SessionData {
+    pub user_id: Uuid,
+    pub profile: Profile,
+
+    pub csrf_token: CsrfToken,
+}
+
+async fn session_get(session: Session, user: User) -> Result<Json<SessionData>, StatusCode> {
+    let Ok(Some(csrf_token)) = CsrfToken::load_from(&session).await else {
+        tracing::error!("User session without CSRF token should be impossible");
+        return Err(StatusCode::UNAUTHORIZED);
+    };
+
+    Ok(Json(SessionData {
+        user_id: user.id,
+        profile: user.profile,
+        csrf_token,
+    }))
+}
+
+async fn session_delete(
+    Back { return_path }: Back,
+    session: Session,
+    TypedHeader(csrf_header): TypedHeader<CsrfToken>,
+) -> AppResult<impl IntoResponse> {
+    let Ok(Some(csrf_session)) = CsrfToken::load_from(&session).await else {
+        return Ok(StatusCode::UNAUTHORIZED.into_response());
+    };
+
+    if csrf_header != csrf_session {
+        return Ok(StatusCode::UNAUTHORIZED.into_response());
+    }
+
+    session.flush().await?;
+
+    match return_path {
+        Some(path) => Ok(Redirect::to(&path).into_response()),
+        None => Ok(Redirect::to("/").into_response()),
+    }
+}
+
+pub struct Back {
+    return_path: Option<String>,
+}
+
+#[axum::async_trait]
+impl<S> axum::extract::FromRequestParts<S> for Back
+where
+    S: Send + Sync,
+{
+    type Rejection = std::convert::Infallible;
+
+    async fn from_request_parts(
+        parts: &mut http::request::Parts,
+        state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        let value = TypedHeader::<Referer>::from_request_parts(parts, state)
+            .await
+            .ok();
+
+        let return_path = match value {
+            None => None,
+            Some(value) => {
+                let mut paths = Vec::<HeaderValue>::new();
+                value.encode(&mut paths);
+                first_nonempty(&paths)
+            }
+        };
+
+        Ok(Self { return_path })
+    }
+}
+
+fn first_nonempty(values: &[HeaderValue]) -> Option<String> {
+    let v = values.first()?;
+    let v = v.to_str().ok()?;
+
+    if v.is_empty() {
+        None
+    } else {
+        Some(v.to_string())
+    }
 }
 
 fn init_tracing() -> eyre::Result<()> {

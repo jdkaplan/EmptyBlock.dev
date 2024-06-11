@@ -40,9 +40,7 @@ pub fn TrellisConfig() -> Html {
 
     html! {
         <div class="min-h-screen flex flex-col text-black bg-white dark:text-white dark:bg-black">
-            <Header>
-                <span>{"TODO(login)"}</span>
-            </Header>
+            <Header/ >
 
             <main class="flex-grow flex flex-col justify-between m-1">
                 {inner}

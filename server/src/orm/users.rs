@@ -3,16 +3,14 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "greetings")]
+#[sea_orm(table_name = "users")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    #[sea_orm(column_type = "Text", unique)]
-    pub greeting: String,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub template: Option<String>,
+    #[sea_orm(unique)]
+    pub recurse_user_id: i64,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
