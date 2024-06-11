@@ -10,6 +10,7 @@ repository = "https://github.com/jdkaplan/EmptyBlock.dev"
 [workspace.metadata.bin]
 cargo-about = { version = '0.6.1' }
 cargo-deny = { version = '0.12.2' }
+cargo-machete = { version = '0.6.2' }
 cargo-make = { version = '0.37.10' }
 sea-orm-cli = { version = '0.12.14' }
 squill = { version = '0.8.0' }
