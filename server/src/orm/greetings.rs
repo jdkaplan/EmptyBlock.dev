@@ -11,6 +11,8 @@ pub struct Model {
     pub greeting: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub template: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

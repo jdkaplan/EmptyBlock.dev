@@ -194,7 +194,10 @@ async fn not_found() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Not Found")
 }
 
-async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoResponse> {
+async fn hello(
+    State(db): State<DatabaseConnection>,
+    user: Option<User>,
+) -> AppResult<impl IntoResponse> {
     use orm::prelude::*;
     use sea_orm::prelude::*;
     use sea_orm::query::{QueryOrder, QuerySelect};
@@ -206,14 +209,18 @@ async fn hello(State(db): State<DatabaseConnection>) -> AppResult<impl IntoRespo
         .await
         .wrap_err("random greeting")?;
 
-    println!("{:?}", greeting);
-
     let Some(greeting) = greeting else {
         tracing::error!("no greetings registered");
         return Ok(String::from("Hi!"));
     };
 
-    Ok(greeting.greeting)
+    let message = if let (Some(template), Some(user)) = (greeting.template, user) {
+        template.replace("{}", &user.profile.name)
+    } else {
+        greeting.greeting
+    };
+
+    Ok(message)
 }
 
 async fn about(State(globals): State<Arc<Globals>>) -> impl IntoResponse {
