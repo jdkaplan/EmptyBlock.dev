@@ -8,6 +8,12 @@ If you want more details to help you get started, feel free to open an issue
 
 ## What to install
 
+I've tried to keep a lot of things scoped within this project, but you will
+need a few global dependencies.
+
+(If you _really_ don't want to use Docker, you can use a non-container
+Postgres, but you might not be able to use all of my convenience scripts.)
+
 1. [Rust stable]
 2. The Rust Wasm target: `rustup target add wasm32-unknown-unknown`
 3. [Docker] (and [docker-compose] if that didn't already come with it)
@@ -22,24 +28,31 @@ If you want more details to help you get started, feel free to open an issue
 
 ## First-time setup
 
+This configuration only has to be done once (or if we add new system dependencies).
+
 1. Install everything above.
-2. Clone this repo.
-3. Copy `.env.template` to `.env`: `cp --interactive --verbose .env.template .env`
-4. Edit the `TODO` placeholders in `.env` to fit your environment.
-5. Load `.env` into your shell. I recommend [direnv] for convenience, but `source .env` works too.
-6. Install all the dev tools: `cargo make deps`
-7. Start the local development database (as a Postgres container): `cargo make services`
-8. Apply database migrations: `cargo make db`
-9. Start all the dev servers: `cargo make dev`
-10. Go to `http://localhost:8080`
+3. Clone this repo and `cd` into it.
+2. Install all the project-specific dev tools: `cargo make deps`
+4. Copy `.env.template` to `.env`: `cp --interactive --verbose .env.template .env`
+5. Edit the `TODO` placeholders in `.env` to fit your environment.
+
+## Regular dev setup
+
+You'll probably do this every time you want to develop locally.
+
+1. Load `.env` into your shell. I recommend [direnv] for convenience, but `source .env` works too.
+2. Start the local development database (as a Postgres container): `cargo make services`
+3. Apply database migrations: `cargo make db`
+4. Start all the dev servers: `cargo make dev`
+5. Go to `http://localhost:8080`
 
 [direnv]: https://direnv.net/
 
 ## Useful dev script reference
 
-These are some commands I run every time I work in this repo. Most of them are
-meta-dev-scripts (they spawn further scripts). If you're curious about what
-they expand to, read [`Makefile.toml`](Makefile.toml).
+These are some common commands I run when I work in this repo. Most of them are
+meta-dev-scripts that spawn further scripts. If you're curious about what they
+expand to, read [`Makefile.toml`](Makefile.toml).
 
 ### List all dev scripts (help)
 
