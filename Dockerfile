@@ -79,8 +79,9 @@ RUN curl \
 
 FROM rust:1.76.0 as licenses
 
-ENV BINSTALL_INSTALLER_URL='https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh'
-ENV BINSTALL_INSTALLER_SHA256='b2668d7619a953ad4bc43c340e91bb20eee2f8bda4c36fc5a3fd20f79846c03f'
+ENV BINSTALL_INSTALLER_REF='c8fc23b4b58e7bd14a660d25da03c24a7e009845'
+ENV BINSTALL_INSTALLER_URL="https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${BINSTALL_INSTALLER_REF}/install-from-binstall-release.sh"
+ENV BINSTALL_INSTALLER_SHA256='db593ef039d719c65149ae44643b39fb29ed79f840e91d01386a9b25278bba48'
 
 # TODO: When `ADD --checksum` is more widely supported, use that instead.
 RUN curl \
