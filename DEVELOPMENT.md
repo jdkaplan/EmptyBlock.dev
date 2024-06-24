@@ -21,7 +21,7 @@ Postgres, but you might not be able to use all of my convenience scripts.)
 5. [cargo-binstall] (optional, but _highly_ recommended)
 
 [Rust stable]: https://www.rust-lang.org/tools/install
-[Docker]: https://www.rust-lang.org/tools/install
+[Docker]: https://docs.docker.com/
 [docker-compose]: https://docs.docker.com/compose/install/
 [cargo-run-bin]: https://github.com/dustinblackman/cargo-run-bin?tab=readme-ov-file#install
 [cargo-binstall]: https://crates.io/crates/cargo-binstall
