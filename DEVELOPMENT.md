@@ -34,7 +34,7 @@ This configuration only has to be done once (or if we add new system dependencie
 3. Clone this repo and `cd` into it.
 2. Install all the project-specific dev tools: `cargo make deps`
 4. Copy `.env.template` to `.env`: `cp --interactive --verbose .env.template .env`
-5. Edit the `TODO` placeholders in `.env` to fit your environment.
+5. Edit the `TODO` placeholders in `.env` to fit your environment. Look for the comments to find more details.
 
 ## Regular dev setup
 
