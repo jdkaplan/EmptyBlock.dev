@@ -21,7 +21,7 @@ Postgres, but you might not be able to use all of my convenience scripts.)
 5. [cargo-binstall] (optional, but _highly_ recommended)
 
 [Rust stable]: https://www.rust-lang.org/tools/install
-[Docker]: https://www.rust-lang.org/tools/install
+[Docker]: https://docs.docker.com/
 [docker-compose]: https://docs.docker.com/compose/install/
 [cargo-run-bin]: https://github.com/dustinblackman/cargo-run-bin?tab=readme-ov-file#install
 [cargo-binstall]: https://crates.io/crates/cargo-binstall
@@ -34,7 +34,7 @@ This configuration only has to be done once (or if we add new system dependencie
 3. Clone this repo and `cd` into it.
 2. Install all the project-specific dev tools: `cargo make deps`
 4. Copy `.env.template` to `.env`: `cp --interactive --verbose .env.template .env`
-5. Edit the `TODO` placeholders in `.env` to fit your environment.
+5. Edit the `TODO` placeholders in `.env` to fit your environment. Look for the comments to find more details.
 
 ## Regular dev setup
 
