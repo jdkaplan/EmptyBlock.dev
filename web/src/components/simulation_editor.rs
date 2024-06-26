@@ -73,7 +73,6 @@ impl Component for SimulationEditor {
             "grid-cols-1",
             "lg:grid-cols-2",
             "gap-2",
-            "lg:grid-rows-2",
             props.class.clone()
         );
 
@@ -92,7 +91,12 @@ impl Component for SimulationEditor {
                     </div>
                 </div>
 
-                <div class="flex flex-col h-full lg:row-start-2 space-y-2">
+                <div class="flex flex-col">
+                    <label for="source">{"Module"}</label>
+                    <textarea name="source" ref={self.source_ref.clone()} />
+                </div>
+
+                <div class="flex flex-col h-full space-y-2">
                     <p>{"Initial state"}</p>
                     <div class="space-x-4">
                         <label for="seed">{"Seed"}</label>
@@ -103,11 +107,6 @@ impl Component for SimulationEditor {
                             <Grid prev={Blocks::default()} next={self.preview} class="h-full w-full" />
                         </div>
                     </div>
-                </div>
-
-                <div class="flex flex-col lg:row-start-1 lg:col-start-2 lg:row-span-2">
-                    <label for="source">{"Module"}</label>
-                    <textarea name="source" ref={self.source_ref.clone()} />
                 </div>
             </form>
         }
