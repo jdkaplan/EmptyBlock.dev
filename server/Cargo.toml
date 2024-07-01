@@ -21,7 +21,7 @@ reqwest = { version = "0.12.4", default-features = false, features = ["rustls-tl
 sea-orm = { version = "0.12.15", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
 sea-query = "0.30.7"
 serde = { version = "1.0.203", features = ["derive"] }
-subtle = { version = "2.5.0", features = ["core_hint_black_box", "const-generics"] }
+subtle = { version = "2.6.1", features = ["core_hint_black_box", "const-generics"] }
 thiserror = "1.0.61"
 time = "0.3.36"
 tokio = { version = "1.38.0", features = ["full"] }
