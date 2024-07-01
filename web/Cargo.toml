@@ -31,7 +31,7 @@ yew = { version = "0.21.0", features = ["csr"] }
 yew-router = "0.18.0"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.41"
+wasm-bindgen-test = "0.3.42"
 
 [package.metadata.cargo-machete]
 ignored = ["getrandom"]
