@@ -48,6 +48,11 @@ You'll probably do this every time you want to develop locally.
 
 [direnv]: https://direnv.net/
 
+## Architecture
+
+For a tour of the major components and frameworks, see
+[ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Useful dev script reference
 
 These are some common commands I run when I work in this repo. Most of them are
