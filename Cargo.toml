@@ -13,6 +13,6 @@ cargo-deny = { version = '0.12.2' }
 cargo-machete = { version = '0.6.2' }
 cargo-make = { version = '0.37.10' }
 sea-orm-cli = { version = '0.12.14' }
-squill = { version = '0.8.0' }
+squill-cli = { version = '0.9.1', bins = ["squill"] }
 trunk = { version = '0.18.8' }
 wasm-pack = { version = '0.12.1' }
