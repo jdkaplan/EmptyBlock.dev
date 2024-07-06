@@ -1,0 +1,3 @@
+# database_url = ""
+migrations_dir = "migrations"
+templates_dir = ".squill/templates"
