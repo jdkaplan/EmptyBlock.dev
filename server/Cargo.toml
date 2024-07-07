@@ -7,7 +7,7 @@ publish.workspace = true
 repository.workspace = true
 
 [dependencies]
-axum = { version = "0.7.4", features = ["macros"] }
+axum = { version = "0.7.5", features = ["macros"] }
 axum-extra = { version = "0.9.3", features = ["cookie", "cookie-private", "typed-header"] }
 base64 = "0.22.1"
 color-eyre = "0.6.3"
