@@ -3,16 +3,20 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "greetings")]
+#[sea_orm(table_name = "jobs")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    #[sea_orm(column_type = "Text", unique)]
-    pub greeting: String,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub params: Json,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub error: Option<String>,
+    pub retries_remaining: Option<i32>,
+    pub scheduled_at: DateTime,
+    pub started_at: Option<DateTime>,
+    pub finished_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub template: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
