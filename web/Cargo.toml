@@ -21,7 +21,7 @@ time = { version = "0.3.34", features = ["formatting", "local-offset", "macros",
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["time"] }
 tracing-web = "0.1.3"
-url = "2.5.0"
+url = "2.5.2"
 uuid = { version = "1.7.0", features = ["v4", "serde"] }
 wasm-bindgen-futures = "0.4.42"
 wasmi = "0.31.2"
