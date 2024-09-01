@@ -20,7 +20,7 @@ rand = "0.8.5"
 reqwest = { version = "0.12.4", default-features = false, features = ["rustls-tls", "json"] }
 sea-orm = { version = "0.12.15", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
 sea-query = "0.30.7"
-serde = { version = "1.0.203", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 subtle = { version = "2.6.1", features = ["core_hint_black_box", "const-generics"] }
 thiserror = "1.0.61"
 time = "0.3.36"
