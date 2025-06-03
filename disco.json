@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "services": {
+    "web": {
+      "port": 8080
+    },
+    "hook:deploy:start:before": {
+      "type": "command",
+      "command": "squill migrate -vvv --migrations-dir /src/migrations"
+    }
+  }
+}

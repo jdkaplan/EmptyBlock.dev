@@ -14,10 +14,10 @@ The site consists of...
 - A server called `server` that serves the SPA, a JSON API, and a bit of HTML
 - A PostgreSQL database that acts as the main data store
 
-The site is deployed on my personal [Fly.io] organization and reachable at
+The site is deployed on my personal [Disco] instance and reachable at
 https://www.emptyblock.dev
 
-[Fly.io]: https://fly.io
+[Disco]: https://disco.cloud
 
 ## Frameworks, libraries, etc.
 
